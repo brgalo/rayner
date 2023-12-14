@@ -55,26 +55,24 @@ void VulkanHandler::createInstance() {
   vk::ApplicationInfo appInfo(applicationName.c_str(), 1, engineName.c_str(), 1,
                               vk::ApiVersion13);
 
-  // 
+  // gather all Layers & extensions
+  std::vector<vk::LayerProperties> instanceLayerProps = vk::enumerateInstanceLayerProperties();
+  std::vector<char const *> instanceLayerNames({"VK_LAYER_KHRONOS_validation"});
+  std::vector<char const *> enabledLayers =
+      getLayers(instanceLayerNames, instanceLayerProps);
 
-  vk::InstanceCreateInfo instCreateInfo({}, &appInfo);
+  std::vector<char const *> instanceExtensionNames(
+      {VK_EXT_DEBUG_UTILS_EXTENSION_NAME});
+  
+
+  vk::InstanceCreateInfo instCreateInfo({}, &appInfo, instanceLayerNames, instanceExtensionNames);
 
   // store in member variable
   instance = vk::createInstance(instCreateInfo);
   VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 }
 
-void VulkanHandler::createDebugCallback() {
-
-  // get function pointer for debug messenger
-  auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-      instance.getProcAddr("vkCreateDebugUtilsMessengerEXT"));
-  if (!func) {
-    std::cerr << "GetInstanceProcAddr: Unable to find "
-                 "pfnVkCreateDebugUtilsMessengerEXT function."
-              << std::endl;
-  }
-  
+void VulkanHandler::createDebugCallback() {  
   debugUtilsMessenger = instance.createDebugUtilsMessengerEXT(
       vk::DebugUtilsMessengerCreateInfoEXT(
           {},
@@ -86,20 +84,27 @@ void VulkanHandler::createDebugCallback() {
 }
 
 void VulkanHandler::initPhysicalDevice() {
-  auto temp = instance.enumeratePhysicalDevices();
+  auto devices = instance.enumeratePhysicalDevices();
+
+  for (const auto &device : devices) {
+    if (isDeviceSuitable(device)) {
+      physicalDevice = device;
+      break;
+    }
+  }
 }
 
 std::vector<char const *> VulkanHandler::getLayers(
-    std::vector<std::string> const &layers,
+    std::vector<char const *> const &layers,
     std::vector<vk::LayerProperties> const &layerProperties) {
   std::vector<char const *> enabledLayers;
   enabledLayers.reserve(layers.size());
   for (auto const &layer : layers) {
     assert(std::any_of(layerProperties.begin(), layerProperties.end(),
                        [layer](vk::LayerProperties const &lp) {
-                         return layer == lp.layerName;
+                         return strcmp(layer,lp.layerName)==0;
                        }));
-    enabledLayers.push_back(layer.data());
+    enabledLayers.push_back(layer);
   }
 
   if (std::none_of(layers.begin(), layers.end(),
@@ -137,5 +142,29 @@ std::vector<char const *> VulkanHandler::getExtensions(
       enabledExtenstions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
   }
   return enabledExtenstions;
+}
+
+bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
+
+  // check if graphics and present queues are present
+  QueueFamilyIndices indices;
+  auto queueFamilies = device.getQueueFamilyProperties();
+  uint32_t idx = 0;
+  for (const auto qf : queueFamilies) {
+      if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eGraphics) {
+      indices.graphicsFamily = idx;
+      indices.graphicsFamilyHasValue = true;
+      }
+      vk::Bool32 presentSupport = device.getSurfaceSupportKHR(static_cast<uint32_t>(idx), surface);
+      if (qf.queueCount > 0 && presentSupport) {
+      indices.presentFamily = idx;
+      indices.presentFamilyHasValue = true;
+      }
+      if (indices.isComplete()) {
+      break;
+      }
+      idx++;
+  }
+  queueFamilyIndices = indices;
 }
 }
