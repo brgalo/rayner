@@ -1,16 +1,18 @@
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 
+#include "window.hpp"
+#include <iterator>
 #include "vknhandler.hpp"
 #include <algorithm>
 #include <string>
 #include <vector>
-
-#include <vulkan/vulkan.hpp>
-
 #include <iostream>
-#include <vulkan/vulkan_core.h>
+
+#ifndef DYN_VULKAN
+#define DYN_VULKAN
 
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
+#endif
 
 namespace rn {
 
@@ -40,6 +42,7 @@ debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 VulkanHandler::VulkanHandler() {
   createInstance();
   createDebugCallback();
+  initWindowAndSwapchain();
   initPhysicalDevice();
 }
 
@@ -56,16 +59,16 @@ void VulkanHandler::createInstance() {
                               vk::ApiVersion13);
 
   // gather all Layers & extensions
-  std::vector<vk::LayerProperties> instanceLayerProps = vk::enumerateInstanceLayerProperties();
+  auto instanceLayerProps = vk::enumerateInstanceLayerProperties();
   std::vector<char const *> instanceLayerNames({"VK_LAYER_KHRONOS_validation"});
   std::vector<char const *> enabledLayers =
       getLayers(instanceLayerNames, instanceLayerProps);
 
+  auto instanceExtensionProps = vk::enumerateInstanceExtensionProperties();
   std::vector<char const *> instanceExtensionNames(
       {VK_EXT_DEBUG_UTILS_EXTENSION_NAME});
-  
-
-  vk::InstanceCreateInfo instCreateInfo({}, &appInfo, instanceLayerNames, instanceExtensionNames);
+  std::vector<char const *> enabledExtensions = getExtensions(instanceExtensionNames, instanceExtensionProps);
+  vk::InstanceCreateInfo instCreateInfo({}, &appInfo, enabledLayers, enabledExtensions);
 
   // store in member variable
   instance = vk::createInstance(instCreateInfo);
@@ -81,6 +84,11 @@ void VulkanHandler::createDebugCallback() {
           vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
               vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
               vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation, &debugCallback));
+}
+
+void VulkanHandler::initWindowAndSwapchain() {
+  window.createWindow(1000,500);
+  window.createSurface(instance);
 }
 
 void VulkanHandler::initPhysicalDevice() {
@@ -122,16 +130,16 @@ std::vector<char const *> VulkanHandler::getLayers(
 }
 
 std::vector<char const *> VulkanHandler::getExtensions(
-    std::vector<std::string> const &extensions,
+    std::vector<char const *> const &extensions,
     std::vector<vk::ExtensionProperties> const &extensionProperties) {
-  std::vector<char const *> enabledExtenstions;
-  enabledExtenstions.reserve(extensions.size());
+  std::vector<char const *> enabledExtensions;
+  enabledExtensions.reserve(extensions.size());
   for (auto const &ext : extensions) {
     assert(std::any_of(extensionProperties.begin(), extensionProperties.end(),
                        [ext](vk::ExtensionProperties const &ep) {
-                         return ext == ep.extensionName;
+                         return strcmp(ext,ep.extensionName) == 0;
                        }));
-    enabledExtenstions.push_back(ext.data());
+    enabledExtensions.push_back(ext);
   }
   if(std::none_of(extensions.begin(),extensions.end(),[](std::string const & extension) {return extension == VK_EXT_DEBUG_UTILS_EXTENSION_NAME;}) &&
            std::any_of(extensionProperties.begin(), extensionProperties.end(),
@@ -139,9 +147,15 @@ std::vector<char const *> VulkanHandler::getExtensions(
                          return (strcmp(VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
                                         ep.extensionName) == 0);
                        })) {
-      enabledExtenstions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+      enabledExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
   }
-  return enabledExtenstions;
+
+  // lead gltf Extension, add here to support other window framework
+  uint32_t glfwExtensionCount = 0;
+  const char **glfwExtensions;
+  glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+  enabledExtensions.insert(std::end(enabledExtensions),glfwExtensions,glfwExtensions+glfwExtensionCount);
+  return enabledExtensions;
 }
 
 bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
@@ -166,5 +180,7 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
       idx++;
   }
   queueFamilyIndices = indices;
+
+  return true;
 }
 }

@@ -1,7 +1,12 @@
 #pragma once
 
 #include <vector>
+#ifndef VK_USE_PLATFORM_XCB_KHR
+#define VK_USE_PLATFORM_XCB_KHR
+#endif
 #include <vulkan/vulkan.hpp>
+
+#include "window.hpp"
 
 namespace rn {
 
@@ -32,18 +37,23 @@ private:
   vk::PhysicalDevice physicalDevice;
   vk::SurfaceKHR surface;
   QueueFamilyIndices queueFamilyIndices;
+  Window window;
 
   void createInstance();
   void createDebugCallback();
+  void initWindowAndSwapchain();
   void initPhysicalDevice();
 
-
+  // helpers
   std::vector<char const *>
   getLayers(std::vector<char const *> const &layers,
             std::vector<vk::LayerProperties> const &layerProperties);
   std::vector<char const *> getExtensions(
-      std::vector<std::string> const &extensions,
+      std::vector<char const *> const &extensions,
       std::vector<vk::ExtensionProperties> const &extensionProperties);
   bool isDeviceSuitable(vk::PhysicalDevice device);
+  void hasGflwRequiredInstanceExtenstions() {
+    auto extensions = vk::enumerateInstanceExtensionProperties();
+  }
 };
 }

@@ -1,4 +1,5 @@
 # Rayner
+
 Meet **Rayner**, the vulkan.hpp based thermal raytracer for new space applications
 
 This WIP project aim is to rebuild my old Bachelor's thesis on hardware accelerated raytracing and extend the functionality to also graphically represent the results of the obtained view factors.
@@ -22,4 +23,3 @@ Future:
   - heat
   - degradation
   - induced torque and forces
-  
