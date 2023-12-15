@@ -1,7 +1,5 @@
-#include <array>
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 
-#include "window.hpp"
 #include <iterator>
 #include "vknhandler.hpp"
 #include <algorithm>
@@ -47,10 +45,11 @@ VulkanHandler::VulkanHandler() {
   createInstance();
   createDebugCallback();
   initWindowAndSwapchain();
-  pickPhysicalDevice();
+  createLogicalDevice(pickPhysicalDevice());
 }
 
 VulkanHandler::~VulkanHandler() {
+  instance.destroySurfaceKHR(window.getSurface());
   instance.destroyDebugUtilsMessengerEXT(debugUtilsMessenger);
   instance.destroy();
 }
@@ -100,7 +99,7 @@ vk::PhysicalDevice VulkanHandler::pickPhysicalDevice() {
 
   for (const auto &device : devices) {
     if (isDeviceSuitable(device)) {
-      std::cout << "physical device: " << device.getProperties().deviceName << std::endl;
+    //  std::cout << "physical device: " << device.getProperties().deviceName << std::endl;
       return device;
     }
   }
@@ -173,18 +172,24 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
       if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eGraphics &&
           !indices.graphicsFamilyHasValue) {
       indices.graphicsFamily = idx;
+      indices.computeFamilyCount = qf.queueCount;
       indices.graphicsFamilyHasValue = true;
-      }
-      vk::Bool32 presentSupport = device.getSurfaceSupportKHR(static_cast<uint32_t>(idx), window.getSurface());
-      if (qf.queueCount > 0 && presentSupport && !indices.presentFamilyHasValue) {
-      indices.presentFamily = idx;
-      indices.presentFamilyHasValue = true;
+      indices.graphicsHasPresentSupport = device.getSurfaceSupportKHR(
+          static_cast<uint32_t>(idx), window.getSurface());
       }
       // check for dedicated compute family.
       if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eCompute &&
           !(qf.queueFlags & vk::QueueFlagBits::eGraphics)) {
       indices.computeFamily = idx;
       indices.dedicatedComputeFamilyHasValue = true;
+      }
+      // check for dedicated transfer family.
+      if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eTransfer &&
+          !(qf.queueFlags & vk::QueueFlagBits::eGraphics) &&
+          !(qf.queueFlags & vk::QueueFlagBits::eCompute)) {
+      indices.computeFamily = idx;
+      indices.dedicatedComputeFamilyHasValue = true;
+      indices.computeFamilyCount = qf.queueCount;
       }
       if (indices.isComplete()) {
       break;
@@ -203,7 +208,8 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
   std::set<std::string> reqExtensions(deviceExtensionNames.begin(),
                                       deviceExtensionNames.end());
   for (const auto &dE : devExtensions) {
-      reqExtensions.erase(dE.extensionName);
+      reqExtensions.erase(dE.extensionName.data());
+    //  std::cout << dE.extensionName << std::endl;
   }
   if (reqExtensions.empty()) {
       queueFamilyIndices = indices;
@@ -218,17 +224,19 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
 
 void VulkanHandler::createLogicalDevice(vk::PhysicalDevice physicalDevice) {
   // is ignored by most drivers
-  float queuePrio[2] = {0.f,0.f};
+  float queuePrio = 0.f;
   vk::DeviceQueueCreateInfo graphicsInfo({}, queueFamilyIndices.graphicsFamily,
-                                         2, queuePrio);
+                                         1, &queuePrio);
   vk::DeviceQueueCreateInfo computeInfo({}, queueFamilyIndices.graphicsFamily,
-                                        1, queuePrio);
+                                        1, &queuePrio);
   vk::DeviceQueueCreateInfo presentInfo({}, queueFamilyIndices.presentFamily, 1,
-                                        queuePrio);
+                                        &queuePrio);
   const std::array<const vk::DeviceQueueCreateInfo, 3> queueInfos{graphicsInfo,computeInfo,presentInfo};
+{}
+  vk::DeviceCreateInfo createInfo({}, queueInfos, validationLayers, deviceExtensionNames);
+  device = physicalDevice.createDevice(createInfo);
 
-  vk::DeviceCreateInfo createInfo({}, queueInfos, {}, deviceExtensionNames);
-  
-  
+  // load functions dynamically
+  VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 }
 }

@@ -14,13 +14,16 @@ namespace rn {
 // helper structs
 struct QueueFamilyIndices {
   uint32_t graphicsFamily;
+  uint32_t graphicsFamilyCount = 0;
   uint32_t presentFamily;
+  uint32_t presentFamilyCount = 0;
   uint32_t computeFamily;
+  uint32_t computeFamilyCount = 0;
   bool graphicsFamilyHasValue = false;
-  bool presentFamilyHasValue = false;
+  bool graphicsHasPresentSupport = false;
   bool dedicatedComputeFamilyHasValue = false;
   bool isComplete() {
-    return graphicsFamilyHasValue && presentFamilyHasValue &&
+    return graphicsFamilyHasValue && graphicsHasPresentSupport &&
            dedicatedComputeFamilyHasValue;
   }
 };
@@ -51,6 +54,8 @@ private:
   QueueFamilyIndices queueFamilyIndices;
   Window window;
 
+  vk::CommandPool gCommandPool;
+
   void createInstance();
   void createDebugCallback();
   void initWindowAndSwapchain();
@@ -74,5 +79,7 @@ private:
       VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
       VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
       VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME};
+  const std::vector<const char *> validationLayers = {
+      "VK_LAYER_KHRONOS_validation"};
 };
 }

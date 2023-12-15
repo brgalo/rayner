@@ -35,7 +35,8 @@ Window::Window() {
   (void)glfwCtw;
 }
 
-Window::~Window() { glfwDestroyWindow(window); }
+Window::~Window() {
+  glfwDestroyWindow(window); }
 
 void Window::createSurface(vk::Instance instance) {
   VkSurfaceKHR _surface;
