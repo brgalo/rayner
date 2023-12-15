@@ -27,4 +27,5 @@ target_link_libraries(app PRIVATE   vknhandler
                                     renderer
                                     Vulkan::Vulkan)
 
-include_directories(src/host)
+include_directories(src/host/renderer
+                    src/host/vknhandler)

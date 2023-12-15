@@ -7,6 +7,8 @@
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 
+#include "swapchain.hpp"
+
 namespace rn {
 class Window {
 public:
