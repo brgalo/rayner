@@ -1,3 +1,4 @@
+#include <array>
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 
 #include "window.hpp"
@@ -6,7 +7,10 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <set>
 #include <iostream>
+#include <stdexcept>
+
 
 #ifndef DYN_VULKAN
 #define DYN_VULKAN
@@ -43,7 +47,7 @@ VulkanHandler::VulkanHandler() {
   createInstance();
   createDebugCallback();
   initWindowAndSwapchain();
-  initPhysicalDevice();
+  pickPhysicalDevice();
 }
 
 VulkanHandler::~VulkanHandler() {
@@ -91,15 +95,16 @@ void VulkanHandler::initWindowAndSwapchain() {
   window.createSurface(instance);
 }
 
-void VulkanHandler::initPhysicalDevice() {
+vk::PhysicalDevice VulkanHandler::pickPhysicalDevice() {
   auto devices = instance.enumeratePhysicalDevices();
 
   for (const auto &device : devices) {
     if (isDeviceSuitable(device)) {
-      physicalDevice = device;
-      break;
+      std::cout << "physical device: " << device.getProperties().deviceName << std::endl;
+      return device;
     }
   }
+  throw std::runtime_error("No suitable device present!");
 }
 
 std::vector<char const *> VulkanHandler::getLayers(
@@ -165,22 +170,65 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
   auto queueFamilies = device.getQueueFamilyProperties();
   uint32_t idx = 0;
   for (const auto qf : queueFamilies) {
-      if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eGraphics) {
+      if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eGraphics &&
+          !indices.graphicsFamilyHasValue) {
       indices.graphicsFamily = idx;
       indices.graphicsFamilyHasValue = true;
       }
-      vk::Bool32 presentSupport = device.getSurfaceSupportKHR(static_cast<uint32_t>(idx), surface);
-      if (qf.queueCount > 0 && presentSupport) {
+      vk::Bool32 presentSupport = device.getSurfaceSupportKHR(static_cast<uint32_t>(idx), window.getSurface());
+      if (qf.queueCount > 0 && presentSupport && !indices.presentFamilyHasValue) {
       indices.presentFamily = idx;
       indices.presentFamilyHasValue = true;
+      }
+      // check for dedicated compute family.
+      if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eCompute &&
+          !(qf.queueFlags & vk::QueueFlagBits::eGraphics)) {
+      indices.computeFamily = idx;
+      indices.dedicatedComputeFamilyHasValue = true;
       }
       if (indices.isComplete()) {
       break;
       }
       idx++;
   }
-  queueFamilyIndices = indices;
+  // set graphics queue family as compute queue family, if no dedicated compute
+  // familily was found. This is mostly the case for standard GPU hardware
+  if (!indices.dedicatedComputeFamilyHasValue) {
+      indices.computeFamily = indices.graphicsFamily;
+      indices.dedicatedComputeFamilyHasValue = true;
+  }
 
-  return true;
+  bool extensionSupported = false;
+  std::vector<vk::ExtensionProperties> devExtensions = device.enumerateDeviceExtensionProperties();
+  std::set<std::string> reqExtensions(deviceExtensionNames.begin(),
+                                      deviceExtensionNames.end());
+  for (const auto &dE : devExtensions) {
+      reqExtensions.erase(dE.extensionName);
+  }
+  if (reqExtensions.empty()) {
+      queueFamilyIndices = indices;
+      extensionSupported = true;
+  }
+
+  // determine capabilities of swapchain
+  SwapChainSupportDetails details;
+
+  return extensionSupported && indices.isComplete();
+}
+
+void VulkanHandler::createLogicalDevice(vk::PhysicalDevice physicalDevice) {
+  // is ignored by most drivers
+  float queuePrio[2] = {0.f,0.f};
+  vk::DeviceQueueCreateInfo graphicsInfo({}, queueFamilyIndices.graphicsFamily,
+                                         2, queuePrio);
+  vk::DeviceQueueCreateInfo computeInfo({}, queueFamilyIndices.graphicsFamily,
+                                        1, queuePrio);
+  vk::DeviceQueueCreateInfo presentInfo({}, queueFamilyIndices.presentFamily, 1,
+                                        queuePrio);
+  const std::array<const vk::DeviceQueueCreateInfo, 3> queueInfos{graphicsInfo,computeInfo,presentInfo};
+
+  vk::DeviceCreateInfo createInfo({}, queueInfos, {}, deviceExtensionNames);
+  
+  
 }
 }

@@ -43,7 +43,7 @@ void Window::createSurface(vk::Instance instance) {
                               nullptr, &_surface) != VK_SUCCESS) {
     throw std::runtime_error("failed to create window surface!");
   }
-  surface = static_cast<vk::SurfaceKHR>(_surface);
+  surface = vk::SurfaceKHR(_surface);
 }
 
 void Window::createWindow(uint32_t width, uint32_t height) {

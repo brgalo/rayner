@@ -18,6 +18,7 @@ public:
 
   void createSurface(vk::Instance instance);
   void createWindow(uint32_t width, uint32_t height);
+  const vk::SurfaceKHR getSurface() const {return surface;};
 
   static std::vector<const char*> getGlfwExtensions();
 private:
