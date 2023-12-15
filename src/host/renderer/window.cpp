@@ -30,13 +30,18 @@ void Window::frameBufferResizedCallback(GLFWwindow *pWindow, int width,
   window->height = height;
 }
 
-Window::Window() {
+Window::Window(std::shared_ptr<VulkanHandler> vlkn)
+    : physicalDevice(vlkn->getPhysDevice()) {
+  instance = vlkn->getInstance();
   static auto glfwCtw = glfwContext();
   (void)glfwCtw;
+  initWindowAndSwapchain();
 }
 
 Window::~Window() {
-  glfwDestroyWindow(window); }
+  instance->destroySurfaceKHR(surface);
+  glfwDestroyWindow(window);
+}
 
 void Window::createSurface(vk::Instance instance) {
   VkSurfaceKHR _surface;
@@ -53,5 +58,10 @@ void Window::createWindow(uint32_t width, uint32_t height) {
   window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, window);
   glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, frameBufferResizedCallback);
+}
+
+void Window::initWindowAndSwapchain() {
+  createWindow(1000,500);
+  createSurface(*instance);
 }
 } // namespace rn

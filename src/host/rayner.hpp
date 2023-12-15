@@ -1,8 +1,13 @@
 #pragma once
 
-#include "vknhandler/vknhandler.hpp"
+#include "renderer.hpp"
+#include "vknhandler.hpp"
+#include "window.hpp"
+#include <memory>
 namespace rn {
 class Rayner {
-  VulkanHandler vlkn = VulkanHandler();
+  std::shared_ptr<VulkanHandler> vlkn = std::make_shared<VulkanHandler>();
+
+  Renderer renderer = Renderer(vlkn);
   };
 }

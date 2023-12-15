@@ -9,6 +9,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "GLFW/glfw3.h"
+
 
 #ifndef DYN_VULKAN
 #define DYN_VULKAN
@@ -44,8 +46,8 @@ debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 VulkanHandler::VulkanHandler() {
   createInstance();
   createDebugCallback();
-  initWindowAndSwapchain();
-  createLogicalDevice(pickPhysicalDevice());
+  pickPhysicalDevice();
+  createLogicalDevice();
   createQueues();
   createCommandPools();
 }
@@ -57,9 +59,9 @@ VulkanHandler::~VulkanHandler() {
 
   device.destroy();
 
-  instance.destroySurfaceKHR(window.getSurface());
-  instance.destroyDebugUtilsMessengerEXT(debugUtilsMessenger);
-  instance.destroy();
+
+  instance->destroyDebugUtilsMessengerEXT(debugUtilsMessenger);
+  instance->destroy();
 }
 
 void VulkanHandler::createInstance() {
@@ -76,18 +78,19 @@ void VulkanHandler::createInstance() {
       getLayers(instanceLayerNames, instanceLayerProps);
 
   auto instanceExtensionProps = vk::enumerateInstanceExtensionProperties();
-  std::vector<char const *> instanceExtensionNames(
-      {VK_EXT_DEBUG_UTILS_EXTENSION_NAME});
+  std::vector<char const *> instanceExtensionNames{
+      VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME,
+      VK_KHR_XCB_SURFACE_EXTENSION_NAME};
   std::vector<char const *> enabledExtensions = getExtensions(instanceExtensionNames, instanceExtensionProps);
   vk::InstanceCreateInfo instCreateInfo({}, &appInfo, enabledLayers, enabledExtensions);
 
   // store in member variable
-  instance = vk::createInstance(instCreateInfo);
-  VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
+  instance = std::make_shared<vk::Instance>(vk::createInstance(instCreateInfo));
+  VULKAN_HPP_DEFAULT_DISPATCHER.init(*instance);
 }
 
 void VulkanHandler::createDebugCallback() {  
-  debugUtilsMessenger = instance.createDebugUtilsMessengerEXT(
+  debugUtilsMessenger = instance->createDebugUtilsMessengerEXT(
       vk::DebugUtilsMessengerCreateInfoEXT(
           {},
           vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
@@ -97,18 +100,16 @@ void VulkanHandler::createDebugCallback() {
               vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation, &debugCallback));
 }
 
-void VulkanHandler::initWindowAndSwapchain() {
-  window.createWindow(1000,500);
-  window.createSurface(instance);
-}
 
-vk::PhysicalDevice VulkanHandler::pickPhysicalDevice() {
-  auto devices = instance.enumeratePhysicalDevices();
+
+void VulkanHandler::pickPhysicalDevice() {
+  auto devices = instance->enumeratePhysicalDevices();
 
   for (const auto &device : devices) {
     if (isDeviceSuitable(device)) {
     //  std::cout << "physical device: " << device.getProperties().deviceName << std::endl;
-      return device;
+    physicalDevice = device;
+    return;
     }
   }
   throw std::runtime_error("No suitable device present!");
@@ -182,8 +183,8 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
       indices.graphicsFamily = idx;
       indices.computeFamilyCount = qf.queueCount;
       indices.graphicsFamilyHasValue = true;
-      indices.graphicsHasPresentSupport = device.getSurfaceSupportKHR(
-          static_cast<uint32_t>(idx), window.getSurface());
+      indices.graphicsHasPresentSupport = true; // should hold for almost all graphic cards
+      //device.getSurfaceSupportKHR(static_cast<uint32_t>(idx), window.getSurface());
       }
       // check for dedicated compute family.
       if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eCompute &&
@@ -218,7 +219,7 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
                                       deviceExtensionNames.end());
   for (const auto &dE : devExtensions) {
       reqExtensions.erase(dE.extensionName.data());
-    //  std::cout << dE.extensionName << std::endl;
+      // std::cout << dE.extensionName << std::endl;
   }
   if (reqExtensions.empty()) {
       queueFamilyIndices = indices;
@@ -226,12 +227,10 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
   }
 
   // determine capabilities of swapchain
-  SwapChainSupportDetails details;
-
   return extensionSupported && indices.isComplete();
 }
 
-void VulkanHandler::createLogicalDevice(vk::PhysicalDevice physicalDevice) {
+void VulkanHandler::createLogicalDevice() {
   // is ignored by most drivers
   float queuePrio = 0.f;
   vk::DeviceQueueCreateInfo graphicsInfo({}, queueFamilyIndices.graphicsFamily,

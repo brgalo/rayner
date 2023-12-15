@@ -23,9 +23,12 @@ add_subdirectory(libs/Vulkan-Hpp/glm)
 add_subdirectory(src/host)
 
 add_executable(app main.cpp)
+
 target_link_libraries(app PRIVATE   vknhandler
                                     renderer
-                                    Vulkan::Vulkan)
+                                    Vulkan::Vulkan
+                                    glfw)
 
-include_directories(src/host/renderer
-                    src/host/vknhandler)
+include_directories(src/host/renderer/
+                    src/host/vknhandler/
+                    srx/host/)

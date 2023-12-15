@@ -1,13 +1,13 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 #ifndef VK_USE_PLATFORM_XCB_KHR
 #define VK_USE_PLATFORM_XCB_KHR
 #endif
 #include <vulkan/vulkan.hpp>
 
-#include "window.hpp"
 
 namespace rn {
 
@@ -29,12 +29,6 @@ struct QueueFamilyIndices {
   }
 };
 
-struct SwapChainSupportDetails {
-  VkSurfaceCapabilitiesKHR capabilities;
-  std::vector<VkSurfaceFormatKHR> formats;
-  std::vector<VkPresentModeKHR> presentModes;
-};
-
 // class that interacts with vulkan directly
 class VulkanHandler {
 public:
@@ -44,11 +38,14 @@ public:
   VulkanHandler(const VulkanHandler &) = delete;
   VulkanHandler &operator=(const VulkanHandler &) = delete;
 
+  std::shared_ptr<vk::Instance> getInstance() { return instance; };
+  vk::PhysicalDevice &getPhysDevice() { return physicalDevice; };
+
 private:
   const std::string applicationName = "rayner";
   const std::string engineName = "nopnts";
 
-  vk::Instance instance;
+  std::shared_ptr<vk::Instance> instance;
   vk::DebugUtilsMessengerEXT debugUtilsMessenger;
   vk::PhysicalDevice physicalDevice;
   vk::Device device;
@@ -59,18 +56,16 @@ private:
   vk::CommandPool gPool;
   vk::CommandPool cPool;
   vk::CommandPool tPool;
-  Window window;
 
 
   void createInstance();
   void createDebugCallback();
-  void initWindowAndSwapchain();
-  vk::PhysicalDevice pickPhysicalDevice();
-  void createLogicalDevice(vk::PhysicalDevice physicalDevice);
+  void pickPhysicalDevice();
+  void createLogicalDevice();
   void createQueues();
   void createCommandPools();
 
-  // helpers
+  // helpers 
   std::vector<char const *>
   getLayers(std::vector<char const *> const &layers,
             std::vector<vk::LayerProperties> const &layerProperties);
