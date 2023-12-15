@@ -15,16 +15,17 @@ namespace rn {
 struct QueueFamilyIndices {
   uint32_t graphicsFamily;
   uint32_t graphicsFamilyCount = 0;
-  uint32_t presentFamily;
-  uint32_t presentFamilyCount = 0;
+  uint32_t transferFamily;
+  uint32_t transferFamilyCount = 0;
   uint32_t computeFamily;
   uint32_t computeFamilyCount = 0;
   bool graphicsFamilyHasValue = false;
   bool graphicsHasPresentSupport = false;
+  bool transferFamilyHasValue = false;
   bool dedicatedComputeFamilyHasValue = false;
   bool isComplete() {
     return graphicsFamilyHasValue && graphicsHasPresentSupport &&
-           dedicatedComputeFamilyHasValue;
+           dedicatedComputeFamilyHasValue && transferFamilyHasValue;
   }
 };
 
@@ -52,15 +53,22 @@ private:
   vk::PhysicalDevice physicalDevice;
   vk::Device device;
   QueueFamilyIndices queueFamilyIndices;
+  vk::Queue gQueue;
+  vk::Queue cQueue;
+  vk::Queue tQueue;
+  vk::CommandPool gPool;
+  vk::CommandPool cPool;
+  vk::CommandPool tPool;
   Window window;
 
-  vk::CommandPool gCommandPool;
 
   void createInstance();
   void createDebugCallback();
   void initWindowAndSwapchain();
   vk::PhysicalDevice pickPhysicalDevice();
   void createLogicalDevice(vk::PhysicalDevice physicalDevice);
+  void createQueues();
+  void createCommandPools();
 
   // helpers
   std::vector<char const *>

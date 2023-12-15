@@ -46,9 +46,17 @@ VulkanHandler::VulkanHandler() {
   createDebugCallback();
   initWindowAndSwapchain();
   createLogicalDevice(pickPhysicalDevice());
+  createQueues();
+  createCommandPools();
 }
 
 VulkanHandler::~VulkanHandler() {
+  device.destroyCommandPool(gPool);
+  device.destroyCommandPool(cPool);
+  device.destroyCommandPool(tPool);
+
+  device.destroy();
+
   instance.destroySurfaceKHR(window.getSurface());
   instance.destroyDebugUtilsMessengerEXT(debugUtilsMessenger);
   instance.destroy();
@@ -179,7 +187,8 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
       }
       // check for dedicated compute family.
       if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eCompute &&
-          !(qf.queueFlags & vk::QueueFlagBits::eGraphics)) {
+          !(qf.queueFlags & vk::QueueFlagBits::eGraphics) &&
+          !indices.dedicatedComputeFamilyHasValue) {
       indices.computeFamily = idx;
       indices.dedicatedComputeFamilyHasValue = true;
       }
@@ -187,9 +196,9 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
       if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eTransfer &&
           !(qf.queueFlags & vk::QueueFlagBits::eGraphics) &&
           !(qf.queueFlags & vk::QueueFlagBits::eCompute)) {
-      indices.computeFamily = idx;
-      indices.dedicatedComputeFamilyHasValue = true;
-      indices.computeFamilyCount = qf.queueCount;
+      indices.transferFamily = idx;
+      indices.transferFamilyHasValue = true;
+      indices.transferFamilyCount = qf.queueCount;
       }
       if (indices.isComplete()) {
       break;
@@ -227,16 +236,31 @@ void VulkanHandler::createLogicalDevice(vk::PhysicalDevice physicalDevice) {
   float queuePrio = 0.f;
   vk::DeviceQueueCreateInfo graphicsInfo({}, queueFamilyIndices.graphicsFamily,
                                          1, &queuePrio);
-  vk::DeviceQueueCreateInfo computeInfo({}, queueFamilyIndices.graphicsFamily,
+  vk::DeviceQueueCreateInfo computeInfo({}, queueFamilyIndices.computeFamily,
                                         1, &queuePrio);
-  vk::DeviceQueueCreateInfo presentInfo({}, queueFamilyIndices.presentFamily, 1,
+  vk::DeviceQueueCreateInfo transferInfo({}, queueFamilyIndices.transferFamily, 1,
                                         &queuePrio);
-  const std::array<const vk::DeviceQueueCreateInfo, 3> queueInfos{graphicsInfo,computeInfo,presentInfo};
+  const std::array<const vk::DeviceQueueCreateInfo, 3> queueInfos{graphicsInfo,computeInfo,transferInfo};
 {}
-  vk::DeviceCreateInfo createInfo({}, queueInfos, validationLayers, deviceExtensionNames);
+  vk::DeviceCreateInfo createInfo({}, queueInfos, {}, deviceExtensionNames);
   device = physicalDevice.createDevice(createInfo);
 
   // load functions dynamically
   VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
+}
+
+void VulkanHandler::createQueues() {
+  gQueue = device.getQueue(queueFamilyIndices.graphicsFamily, 0);
+  cQueue = device.getQueue(queueFamilyIndices.computeFamily, 0);
+  tQueue = device.getQueue(queueFamilyIndices.transferFamily, 0);
+}
+
+void VulkanHandler::createCommandPools() {
+  gPool = device.createCommandPool(
+      vk::CommandPoolCreateInfo({}, queueFamilyIndices.graphicsFamily));
+  cPool = device.createCommandPool(
+      vk::CommandPoolCreateInfo({}, queueFamilyIndices.computeFamily));
+  tPool = device.createCommandPool(
+      vk::CommandPoolCreateInfo({}, queueFamilyIndices.transferFamily));
 }
 }
