@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <iostream>
 
-
 int main(int argc, char *argv[]) {
   try {
     rn::Rayner ray;
@@ -16,6 +15,6 @@ int main(int argc, char *argv[]) {
     std::cout << "unknown errow\n";
     exit(-1);
   }
-  
+
   return 0;
 }

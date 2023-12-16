@@ -1,19 +1,16 @@
 #include <memory>
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #include "vknhandler.hpp"
-#include <iterator>
 #include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <set>
-#include <iostream>
-#include <stdexcept>
 
 #include "GLFW/glfw3.h"
-#include "vk_mem_alloc.h"
-
 #include "vma.hpp"
-
 
 #ifndef DYN_VULKAN
 #define DYN_VULKAN
@@ -22,14 +19,14 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 namespace rn {
 
-
 static VKAPI_ATTR VkBool32 VKAPI_CALL
 debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
               VkDebugUtilsMessageTypeFlagsEXT messageType,
               VkDebugUtilsMessengerCallbackDataEXT const *pCallbackData,
               void *pUserData) {
   std::cerr << vk::to_string(
-      static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(messageSeverity))
+                   static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(
+                       messageSeverity))
             << ": "
             << vk::to_string(
                    static_cast<vk::DebugUtilsMessageTypeFlagsEXT>(messageType))
@@ -40,7 +37,6 @@ debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
             << pCallbackData->messageIdNumber << ">\n";
   std::cerr << std::string("\t") << "message            = <"
             << pCallbackData->pMessage << ">\n";
-  
 
   return VK_FALSE;
 }
@@ -67,7 +63,6 @@ VulkanHandler::~VulkanHandler() {
   vma.reset();
   device.destroy();
 
-
   instance->destroyDebugUtilsMessengerEXT(debugUtilsMessenger);
   instance->destroy();
 }
@@ -89,15 +84,17 @@ void VulkanHandler::createInstance() {
   std::vector<char const *> instanceExtensionNames{
       VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME,
       VK_KHR_XCB_SURFACE_EXTENSION_NAME};
-  std::vector<char const *> enabledExtensions = getExtensions(instanceExtensionNames, instanceExtensionProps);
-  vk::InstanceCreateInfo instCreateInfo({}, &appInfo, enabledLayers, enabledExtensions);
+  std::vector<char const *> enabledExtensions =
+      getExtensions(instanceExtensionNames, instanceExtensionProps);
+  vk::InstanceCreateInfo instCreateInfo({}, &appInfo, enabledLayers,
+                                        enabledExtensions);
 
   // store in member variable
   instance = std::make_shared<vk::Instance>(vk::createInstance(instCreateInfo));
   VULKAN_HPP_DEFAULT_DISPATCHER.init(*instance);
 }
 
-void VulkanHandler::createDebugCallback() {  
+void VulkanHandler::createDebugCallback() {
   debugUtilsMessenger = instance->createDebugUtilsMessengerEXT(
       vk::DebugUtilsMessengerCreateInfoEXT(
           {},
@@ -105,19 +102,19 @@ void VulkanHandler::createDebugCallback() {
               vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
           vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
               vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
-              vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation, &debugCallback));
+              vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
+          &debugCallback));
 }
-
-
 
 void VulkanHandler::pickPhysicalDevice() {
   auto devices = instance->enumeratePhysicalDevices();
 
   for (const auto &device : devices) {
     if (isDeviceSuitable(device)) {
-    //  std::cout << "physical device: " << device.getProperties().deviceName << std::endl;
-    physicalDevice = device;
-    return;
+      //  std::cout << "physical device: " << device.getProperties().deviceName
+      //  << std::endl;
+      physicalDevice = device;
+      return;
     }
   }
   throw std::runtime_error("No suitable device present!");
@@ -131,7 +128,7 @@ std::vector<char const *> VulkanHandler::getLayers(
   for (auto const &layer : layers) {
     assert(std::any_of(layerProperties.begin(), layerProperties.end(),
                        [layer](vk::LayerProperties const &lp) {
-                         return strcmp(layer,lp.layerName)==0;
+                         return strcmp(layer, lp.layerName) == 0;
                        }));
     enabledLayers.push_back(layer);
   }
@@ -143,7 +140,7 @@ std::vector<char const *> VulkanHandler::getLayers(
       std::any_of(layerProperties.begin(), layerProperties.end(),
                   [](vk::LayerProperties const &lp) {
                     return (strcmp("VK_LAYER_KHRONOS_validation",
-                                    lp.layerName) == 0);
+                                   lp.layerName) == 0);
                   })) {
     enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
   }
@@ -158,24 +155,28 @@ std::vector<char const *> VulkanHandler::getExtensions(
   for (auto const &ext : extensions) {
     assert(std::any_of(extensionProperties.begin(), extensionProperties.end(),
                        [ext](vk::ExtensionProperties const &ep) {
-                         return strcmp(ext,ep.extensionName) == 0;
+                         return strcmp(ext, ep.extensionName) == 0;
                        }));
     enabledExtensions.push_back(ext);
   }
-  if(std::none_of(extensions.begin(),extensions.end(),[](std::string const & extension) {return extension == VK_EXT_DEBUG_UTILS_EXTENSION_NAME;}) &&
-           std::any_of(extensionProperties.begin(), extensionProperties.end(),
-                       [](vk::ExtensionProperties const &ep) {
-                         return (strcmp(VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-                                        ep.extensionName) == 0);
-                       })) {
-      enabledExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+  if (std::none_of(extensions.begin(), extensions.end(),
+                   [](std::string const &extension) {
+                     return extension == VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+                   }) &&
+      std::any_of(extensionProperties.begin(), extensionProperties.end(),
+                  [](vk::ExtensionProperties const &ep) {
+                    return (strcmp(VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+                                   ep.extensionName) == 0);
+                  })) {
+    enabledExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
   }
 
   // lead gltf Extension, add here to support other window framework
   uint32_t glfwExtensionCount = 0;
   const char **glfwExtensions;
   glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-  enabledExtensions.insert(std::end(enabledExtensions),glfwExtensions,glfwExtensions+glfwExtensionCount);
+  enabledExtensions.insert(std::end(enabledExtensions), glfwExtensions,
+                           glfwExtensions + glfwExtensionCount);
   return enabledExtensions;
 }
 
@@ -186,52 +187,55 @@ bool VulkanHandler::isDeviceSuitable(vk::PhysicalDevice device) {
   auto queueFamilies = device.getQueueFamilyProperties();
   uint32_t idx = 0;
   for (const auto qf : queueFamilies) {
-      if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eGraphics &&
-          !indices.graphicsFamilyHasValue) {
+    if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eGraphics &&
+        !indices.graphicsFamilyHasValue) {
       indices.graphicsFamily = idx;
       indices.computeFamilyCount = qf.queueCount;
       indices.graphicsFamilyHasValue = true;
-      indices.graphicsHasPresentSupport = true; // should hold for almost all graphic cards
-      //device.getSurfaceSupportKHR(static_cast<uint32_t>(idx), window.getSurface());
-      }
-      // check for dedicated compute family.
-      if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eCompute &&
-          !(qf.queueFlags & vk::QueueFlagBits::eGraphics) &&
-          !indices.dedicatedComputeFamilyHasValue) {
+      indices.graphicsHasPresentSupport =
+          true; // should hold for almost all graphic cards
+      // device.getSurfaceSupportKHR(static_cast<uint32_t>(idx),
+      // window.getSurface());
+    }
+    // check for dedicated compute family.
+    if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eCompute &&
+        !(qf.queueFlags & vk::QueueFlagBits::eGraphics) &&
+        !indices.dedicatedComputeFamilyHasValue) {
       indices.computeFamily = idx;
       indices.dedicatedComputeFamilyHasValue = true;
-      }
-      // check for dedicated transfer family.
-      if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eTransfer &&
-          !(qf.queueFlags & vk::QueueFlagBits::eGraphics) &&
-          !(qf.queueFlags & vk::QueueFlagBits::eCompute)) {
+    }
+    // check for dedicated transfer family.
+    if (qf.queueCount > 0 && qf.queueFlags & vk::QueueFlagBits::eTransfer &&
+        !(qf.queueFlags & vk::QueueFlagBits::eGraphics) &&
+        !(qf.queueFlags & vk::QueueFlagBits::eCompute)) {
       indices.transferFamily = idx;
       indices.transferFamilyHasValue = true;
       indices.transferFamilyCount = qf.queueCount;
-      }
-      if (indices.isComplete()) {
+    }
+    if (indices.isComplete()) {
       break;
-      }
-      idx++;
+    }
+    idx++;
   }
   // set graphics queue family as compute queue family, if no dedicated compute
   // familily was found. This is mostly the case for standard GPU hardware
   if (!indices.dedicatedComputeFamilyHasValue) {
-      indices.computeFamily = indices.graphicsFamily;
-      indices.dedicatedComputeFamilyHasValue = true;
+    indices.computeFamily = indices.graphicsFamily;
+    indices.dedicatedComputeFamilyHasValue = true;
   }
 
   bool extensionSupported = false;
-  std::vector<vk::ExtensionProperties> devExtensions = device.enumerateDeviceExtensionProperties();
+  std::vector<vk::ExtensionProperties> devExtensions =
+      device.enumerateDeviceExtensionProperties();
   std::set<std::string> reqExtensions(deviceExtensionNames.begin(),
                                       deviceExtensionNames.end());
   for (const auto &dE : devExtensions) {
-      reqExtensions.erase(dE.extensionName.data());
-      // std::cout << dE.extensionName << std::endl;
+    reqExtensions.erase(dE.extensionName.data());
+    // std::cout << dE.extensionName << std::endl;
   }
   if (reqExtensions.empty()) {
-      queueFamilyIndices = indices;
-      extensionSupported = true;
+    queueFamilyIndices = indices;
+    extensionSupported = true;
   }
 
   // determine capabilities of swapchain
@@ -243,12 +247,13 @@ void VulkanHandler::createLogicalDevice() {
   float queuePrio = 0.f;
   vk::DeviceQueueCreateInfo graphicsInfo({}, queueFamilyIndices.graphicsFamily,
                                          1, &queuePrio);
-  vk::DeviceQueueCreateInfo computeInfo({}, queueFamilyIndices.computeFamily,
-                                        1, &queuePrio);
-  vk::DeviceQueueCreateInfo transferInfo({}, queueFamilyIndices.transferFamily, 1,
+  vk::DeviceQueueCreateInfo computeInfo({}, queueFamilyIndices.computeFamily, 1,
                                         &queuePrio);
-  const std::array<const vk::DeviceQueueCreateInfo, 3> queueInfos{graphicsInfo,computeInfo,transferInfo};
-{}
+  vk::DeviceQueueCreateInfo transferInfo({}, queueFamilyIndices.transferFamily,
+                                         1, &queuePrio);
+  const std::array<const vk::DeviceQueueCreateInfo, 3> queueInfos{
+      graphicsInfo, computeInfo, transferInfo};
+  {}
   vk::DeviceCreateInfo createInfo({}, queueInfos, {}, deviceExtensionNames);
   device = physicalDevice.createDevice(createInfo);
 
@@ -271,4 +276,4 @@ void VulkanHandler::createCommandPools() {
       vk::CommandPoolCreateInfo({}, queueFamilyIndices.transferFamily));
 }
 
-}
+} // namespace rn

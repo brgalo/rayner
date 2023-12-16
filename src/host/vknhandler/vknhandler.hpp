@@ -15,8 +15,6 @@
 #include "../../../libs/VulkanMemoryAllocator/include/vk_mem_alloc.h"
 #endif
 
-
-
 namespace rn {
 
 class VMA;
@@ -50,7 +48,7 @@ public:
 
   const std::shared_ptr<vk::Instance> getInstance() const { return instance; };
   const vk::PhysicalDevice &getPhysDevice() const { return physicalDevice; };
-  const vk::Device &getDevice() const {return device;};
+  const vk::Device &getDevice() const { return device; };
 
 private:
   std::shared_ptr<VMA> vma = nullptr;
@@ -69,7 +67,6 @@ private:
   vk::CommandPool cPool;
   vk::CommandPool tPool;
 
-
   void createInstance();
   void createDebugCallback();
   void pickPhysicalDevice();
@@ -78,7 +75,7 @@ private:
   void createQueues();
   void createCommandPools();
 
-  // helpers 
+  // helpers
   std::vector<char const *>
   getLayers(std::vector<char const *> const &layers,
             std::vector<vk::LayerProperties> const &layerProperties);

@@ -11,9 +11,7 @@ namespace rn {
 class VMA {
 public:
   VMA(VulkanHandler *vkn_, VmaVulkanFunctions fun);
-  ~VMA() {
-    vmaDestroyAllocator(vma);
-  }
+  ~VMA() { vmaDestroyAllocator(vma); }
 
 private:
   void init();
