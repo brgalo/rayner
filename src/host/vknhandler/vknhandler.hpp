@@ -39,7 +39,8 @@ public:
   VulkanHandler &operator=(const VulkanHandler &) = delete;
 
   std::shared_ptr<vk::Instance> getInstance() { return instance; };
-  vk::PhysicalDevice &getPhysDevice() { return physicalDevice; };
+  const vk::PhysicalDevice &getPhysDevice() const { return physicalDevice; };
+  const vk::Device &getDevice() const {return device;};
 
 private:
   const std::string applicationName = "rayner";

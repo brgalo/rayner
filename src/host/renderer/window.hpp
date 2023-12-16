@@ -28,7 +28,7 @@ public:
 
 private:
   std::shared_ptr<vk::Instance> instance;
-  vk::PhysicalDevice &physicalDevice;
+  vk::PhysicalDevice const &physicalDevice;
   void initWindowAndSwapchain();
   vk::SurfaceKHR surface;
   GLFWwindow *window = nullptr;
