@@ -1,7 +1,7 @@
 #pragma once
-
+#define VMA_VULKAN_VERSION 1002000
 #include "vknhandler.hpp"
-#include <vulkan/vulkan_core.h>
+
 #ifndef VMA_H
 #define VMA_H
 #include "../../../libs/VulkanMemoryAllocator/include/vk_mem_alloc.h"
@@ -11,11 +11,13 @@ namespace rn {
 class VMA {
 public:
   VMA(VulkanHandler *vkn_, VmaVulkanFunctions fun);
-  ~VMA() { vmaDestroyAllocator(vma); }
-
+  ~VMA() { vmaDestroyAllocator(vma_); }
+  vk::Image creatDepthImage(VmaAllocation &alloc,
+                       VmaAllocationInfo &allocInfo,
+                       vk::ImageCreateInfo imgInfo);
 private:
   void init();
-  VmaAllocator vma;
+  VmaAllocator vma_;
   const VkDevice dev;
 };
 

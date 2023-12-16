@@ -49,6 +49,7 @@ public:
   const std::shared_ptr<vk::Instance> getInstance() const { return instance; };
   const vk::PhysicalDevice &getPhysDevice() const { return physicalDevice; };
   const vk::Device &getDevice() const { return device; };
+  std::shared_ptr<VMA> getVma() {return vma;};
 
 private:
   std::shared_ptr<VMA> vma = nullptr;
