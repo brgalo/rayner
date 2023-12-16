@@ -1,5 +1,4 @@
 #include "swapchain.hpp"
-#include "window.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <limits>

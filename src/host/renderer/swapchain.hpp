@@ -1,12 +1,10 @@
 #pragma once
 
-#include "../vknhandler/vknhandler.hpp"
 #include "window.hpp"
 #include <cstdint>
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 struct SwapChainSupportDetails {

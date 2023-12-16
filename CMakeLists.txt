@@ -20,6 +20,9 @@ include_directories(libs/Vulkan-Hpp/glfw/include)
 #glm
 add_subdirectory(libs/Vulkan-Hpp/glm)
 
+#vulkan memory allocator
+add_subdirectory(libs/VulkanMemoryAllocator)
+
 add_subdirectory(src/host)
 
 add_executable(app main.cpp)

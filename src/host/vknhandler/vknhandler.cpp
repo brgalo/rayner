@@ -1,7 +1,7 @@
+#include <memory>
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-
-#include <iterator>
 #include "vknhandler.hpp"
+#include <iterator>
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -10,11 +10,13 @@
 #include <stdexcept>
 
 #include "GLFW/glfw3.h"
+#include "vk_mem_alloc.h"
+
+#include "vma.hpp"
 
 
 #ifndef DYN_VULKAN
 #define DYN_VULKAN
-
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 #endif
 
@@ -48,6 +50,12 @@ VulkanHandler::VulkanHandler() {
   createDebugCallback();
   pickPhysicalDevice();
   createLogicalDevice();
+  vma = std::make_shared<VMA>(
+      this, VmaVulkanFunctions{
+                .vkGetInstanceProcAddr =
+                    VULKAN_HPP_DEFAULT_DISPATCHER.vkGetInstanceProcAddr,
+                .vkGetDeviceProcAddr =
+                    VULKAN_HPP_DEFAULT_DISPATCHER.vkGetDeviceProcAddr});
   createQueues();
   createCommandPools();
 }
@@ -56,7 +64,7 @@ VulkanHandler::~VulkanHandler() {
   device.destroyCommandPool(gPool);
   device.destroyCommandPool(cPool);
   device.destroyCommandPool(tPool);
-
+  vma.reset();
   device.destroy();
 
 
@@ -262,4 +270,5 @@ void VulkanHandler::createCommandPools() {
   tPool = device.createCommandPool(
       vk::CommandPoolCreateInfo({}, queueFamilyIndices.transferFamily));
 }
+
 }

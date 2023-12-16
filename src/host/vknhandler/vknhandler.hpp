@@ -8,8 +8,18 @@
 #endif
 #include <vulkan/vulkan.hpp>
 
+#define VMA_STATIC_VULKAN_FUNCTIONS 0
+#define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
+#ifndef VMA_H
+#define VMA_H
+#include "../../../libs/VulkanMemoryAllocator/include/vk_mem_alloc.h"
+#endif
+
+
 
 namespace rn {
+
+class VMA;
 
 // helper structs
 struct QueueFamilyIndices {
@@ -38,11 +48,12 @@ public:
   VulkanHandler(const VulkanHandler &) = delete;
   VulkanHandler &operator=(const VulkanHandler &) = delete;
 
-  std::shared_ptr<vk::Instance> getInstance() { return instance; };
+  const std::shared_ptr<vk::Instance> getInstance() const { return instance; };
   const vk::PhysicalDevice &getPhysDevice() const { return physicalDevice; };
   const vk::Device &getDevice() const {return device;};
 
 private:
+  std::shared_ptr<VMA> vma = nullptr;
   const std::string applicationName = "rayner";
   const std::string engineName = "nopnts";
 
@@ -63,6 +74,7 @@ private:
   void createDebugCallback();
   void pickPhysicalDevice();
   void createLogicalDevice();
+  void createVMA();
   void createQueues();
   void createCommandPools();
 
@@ -86,4 +98,4 @@ private:
   const std::vector<const char *> validationLayers = {
       "VK_LAYER_KHRONOS_validation"};
 };
-}
+} // namespace rn

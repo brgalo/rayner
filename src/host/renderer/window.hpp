@@ -7,7 +7,7 @@
 #endif
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
-#include "../vknhandler/vknhandler.hpp"
+#include "vknhandler.hpp"
 
 namespace rn {
 class Window {

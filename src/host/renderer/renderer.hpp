@@ -1,7 +1,6 @@
 #pragma once
 
 #include "swapchain.hpp"
-#include "window.hpp"
 #include <memory>
 namespace rn {
 class Renderer {

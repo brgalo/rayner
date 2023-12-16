@@ -1,8 +1,6 @@
 #pragma once
 
 #include "renderer.hpp"
-#include "vknhandler.hpp"
-#include "window.hpp"
 #include <memory>
 namespace rn {
 class Rayner {
@@ -10,4 +8,4 @@ class Rayner {
 
   Renderer renderer = Renderer(vlkn);
   };
-}
+} // namespace rn
