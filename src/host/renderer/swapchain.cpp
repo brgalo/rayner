@@ -1,5 +1,6 @@
 #include "swapchain.hpp"
 #include "window.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -13,7 +14,6 @@ namespace rn {
 SwapChain::SwapChain(std::shared_ptr<VulkanHandler> vulkanHandler,
                      const Window &window_) : window(window_) {
   vlkn = vulkanHandler;
-  createSC(window.getSurface());
   details.capabilities =
       vlkn->getPhysDevice().getSurfaceCapabilitiesKHR(window.getSurface());
   details.formats = vlkn->getPhysDevice().getSurfaceFormatsKHR(window.getSurface());
@@ -21,20 +21,29 @@ SwapChain::SwapChain(std::shared_ptr<VulkanHandler> vulkanHandler,
     throw std::runtime_error("no surface formats available!");
   details.presentModes =
       vlkn->getPhysDevice().getSurfacePresentModesKHR(window.getSurface());
+  init();
 };
 
 SwapChain::~SwapChain() {
-  for (auto &iv : imageViews) {
+  for (auto &iv : scImageViews) {
     vlkn->getDevice().destroyImageView(iv);
   }
   vlkn->getDevice().destroySwapchainKHR(swapChain);
 }
 
-void SwapChain::createSC(const vk::SurfaceKHR &surface) {
+void SwapChain::init() {
+  createSC();
+  createImageViews();
+  createDepthResources();
+}
+
+void SwapChain::createSC() {
   querySwapChainSupport();
   surfaceFormat = chooseSwapSurfaceFormat();
   presentMode = chooseSwapPresentMode();
   extent = chooseSwapExtent();
+  depthFormat = chooseDepthFormat();
+
   imageCount = details.capabilities.minImageCount + 1;
   if (details.capabilities.minImageCount > 0 &&
       imageCount > details.capabilities.maxImageCount) {
@@ -53,14 +62,36 @@ void SwapChain::createSC(const vk::SurfaceKHR &surface) {
   scImages = vlkn->getDevice().getSwapchainImagesKHR(swapChain);
 }
 
-void SwapChain::createIV() {
-  imageViews.reserve(scImages.size());
+void SwapChain::createImageViews() {
+  scImageViews.reserve(scImages.size());
   vk::ImageViewCreateInfo createInfo({}, {}, vk::ImageViewType::e2D, surfaceFormat.format,
                           {}, {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
   for (auto &i : scImages) {
         createInfo.image = i;
-        imageViews.push_back(vlkn->getDevice().createImageView(createInfo));
+        scImageViews.push_back(vlkn->getDevice().createImageView(createInfo));
   }
+}
+
+void SwapChain::createDepthResources() {
+  depthImages.reserve(scImages.size());
+  depthImageViews.reserve(scImages.size());
+  depthMemory.reserve(scImages.size());
+  vk::ImageCreateInfo imageInfo(
+      {}, vk::ImageType::e2D, depthFormat, vk::Extent3D{extent, 1}, 1, 1,
+      vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal,
+      vk::ImageUsageFlagBits::eDepthStencilAttachment,
+      vk::SharingMode::eExclusive);
+
+  vk::ImageViewCreateInfo viewInfo({}, nullptr, vk::ImageViewType::e2D,
+                                   depthFormat);
+
+  for (uint32_t i = 0; i < scImages.size(); ++i) {
+        depthImages.push_back(vlkn->getDevice().createImage(imageInfo));
+        viewInfo.setImage(depthImages.back());
+        
+
+  }
+  
 }
 
 vk::SurfaceFormatKHR SwapChain::chooseSwapSurfaceFormat() {
@@ -98,6 +129,25 @@ vk::Extent2D SwapChain::chooseSwapExtent() {
                           actualExtent.height));
     return actualExtent;
   }
+}
+
+vk::Format SwapChain::chooseDepthFormat() {
+  std::vector<vk::Format> formats{vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint,
+                          vk::Format::eD24UnormS8Uint};
+  vk::ImageTiling tiling = vk::ImageTiling::eOptimal;
+  vk::FormatFeatureFlagBits flags =
+      vk::FormatFeatureFlagBits::eDepthStencilAttachment;
+  for (auto f : formats) {
+    vk::FormatProperties props = vlkn->getPhysDevice().getFormatProperties(f);
+    if (tiling == vk::ImageTiling::eLinear &&
+        (props.linearTilingFeatures & flags) == flags) {
+      return f;
+    } else if (tiling == vk::ImageTiling::eOptimal &&
+               (props.optimalTilingFeatures & flags) == flags) {
+      return f;
+    }
+  }
+  throw std::runtime_error("failed to find supported depth format!");
 }
 
 SwapChainSupportDetails SwapChain::querySwapChainSupport() {
