@@ -1,4 +1,5 @@
 #include "swapchain.hpp"
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -7,6 +8,7 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_enums.hpp>
+#include <vulkan/vulkan_handles.hpp>
 #include <vulkan/vulkan_structs.hpp>
 
 #include "vma.hpp"
@@ -28,6 +30,21 @@ SwapChain::SwapChain(std::shared_ptr<VulkanHandler> vulkanHandler,
 };
 
 SwapChain::~SwapChain() {
+  // destroy frambuffer
+  for (auto &f : framebuffers) {
+    vlkn->getDevice().destroyFramebuffer(f);
+  }
+
+  // subpass
+  vlkn->getDevice().destroyRenderPass(renderPassTriangles);
+
+  // destroy depth resources
+  for (size_t i = 0; i < imageCount; ++i) {
+    vlkn->getVma()->destroyImage(depthImages[i], depthImageAlloc[i]);
+    vlkn->getDevice().destroyImageView(depthImageViews[i]);
+  }
+
+  // destroy swapchain and resources
   for (auto &iv : scImageViews) {
     vlkn->getDevice().destroyImageView(iv);
   }
@@ -37,7 +54,9 @@ SwapChain::~SwapChain() {
 void SwapChain::init() {
   createSC();
   createImageViews();
+  createRenderPass();
   createDepthResources();
+  createFramebuffers();
 }
 
 void SwapChain::createSC() {
@@ -63,10 +82,11 @@ void SwapChain::createSC() {
       vk::CompositeAlphaFlagBitsKHR::eOpaque, presentMode, true, tempSwap);
   swapChain = vlkn->getDevice().createSwapchainKHR(createInfo);
   scImages = vlkn->getDevice().getSwapchainImagesKHR(swapChain);
+  imageCount = scImages.size();
 }
 
 void SwapChain::createImageViews() {
-  scImageViews.reserve(scImages.size());
+  scImageViews.reserve(imageCount);
   vk::ImageViewCreateInfo createInfo(
       {}, {}, vk::ImageViewType::e2D, surfaceFormat.format, {},
       {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
@@ -76,10 +96,38 @@ void SwapChain::createImageViews() {
   }
 }
 
+void SwapChain::createRenderPass() {
+  std::array<vk::AttachmentDescription, 2> attDescr;
+
+  vk::AttachmentDescription colorAttachment(
+      {}, depthFormat, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear,
+      vk::AttachmentStoreOp::eDontCare, vk::AttachmentLoadOp::eDontCare,
+      vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined,
+      vk::ImageLayout::eDepthStencilAttachmentOptimal);
+  attDescr[0] = colorAttachment;
+
+  colorAttachment.setFormat(surfaceFormat.format);
+  colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);
+  colorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+  attDescr[1] = colorAttachment;
+
+  vk::AttachmentReference depthRef{
+      0, vk::ImageLayout::eDepthStencilAttachmentOptimal};
+  vk::AttachmentReference colorRef{1, vk::ImageLayout::eColorAttachmentOptimal};
+
+  vk::SubpassDescription subpassDescr{
+      {}, vk::PipelineBindPoint::eGraphics, {}, colorRef, {}, &depthRef};
+  renderPassTriangles = vlkn->getDevice().createRenderPass(
+      vk::RenderPassCreateInfo({}, attDescr, subpassDescr));
+}
+
 void SwapChain::createDepthResources() {
-  depthImages.reserve(scImages.size());
-  depthImageViews.reserve(scImages.size());
-  depthMemory.reserve(scImages.size());
+  depthImages.reserve(imageCount);
+  depthImageViews.reserve(imageCount);
+  depthImageAlloc.reserve(imageCount);
+  depthImageAllocInfo.reserve(imageCount);
+
   vk::ImageCreateInfo imageInfo(
       {}, vk::ImageType::e2D, depthFormat, vk::Extent3D{extent, 1}, 1, 1,
       vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal,
@@ -92,11 +140,27 @@ void SwapChain::createDepthResources() {
 
   VmaAllocationCreateInfo createInfo{};
   createInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-  for (uint32_t i = 0; i < scImages.size(); ++i) {
+  for (uint32_t i = 0; i < imageCount; ++i) {
     VmaAllocation imgAlloc{};
     VmaAllocationInfo allocInfo{};
-    depthImages.push_back(vlkn->getVma()->creatDepthImage(imgAlloc, allocInfo, imageInfo));
+    depthImages.push_back(
+        vlkn->getVma()->creatDepthImage(imgAlloc, allocInfo, imageInfo));
+    depthImageAllocInfo.push_back(allocInfo);
+    depthImageAlloc.push_back(imgAlloc);
     viewInfo.setImage(depthImages.back());
+    depthImageViews.push_back(vlkn->getDevice().createImageView(viewInfo));
+  }
+}
+
+void SwapChain::createFramebuffers() {
+  framebuffers.reserve(imageCount);
+  vk::FramebufferCreateInfo info{
+      {}, renderPassTriangles, {}, extent.width, extent.height, 1};
+  for (size_t i = 0; i < imageCount; ++i) {
+    std::vector<vk::ImageView> attachments = {depthImageViews[i],
+                                              scImageViews[i]};
+    framebuffers.push_back(
+        vlkn->getDevice().createFramebuffer(info.setAttachments(attachments)));
   }
 }
 

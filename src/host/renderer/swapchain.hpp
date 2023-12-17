@@ -15,6 +15,7 @@ struct SwapChainSupportDetails {
 
 class SwapChain {
 public:
+  static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
   SwapChain(std::shared_ptr<VulkanHandler> vulkanHandler,
             const Window &window);
   ~SwapChain();
@@ -29,7 +30,9 @@ private:
   void init();
   void createSC();
   void createImageViews();
+  void createRenderPass();
   void createDepthResources();
+  void createFramebuffers();
   vk::SurfaceFormatKHR chooseSwapSurfaceFormat();
   vk::PresentModeKHR chooseSwapPresentMode();
   vk::Extent2D chooseSwapExtent();
@@ -44,11 +47,15 @@ private:
   uint32_t imageCount;
 
   vk::SwapchainKHR swapChain;
+  vk::RenderPass renderPassLines;
+  vk::RenderPass renderPassTriangles;
   std::vector<vk::Image> scImages;
   std::vector<vk::ImageView> scImageViews;
   std::vector<vk::Image> depthImages;
   std::vector<vk::ImageView> depthImageViews;
-  std::vector<vk::DeviceMemory> depthMemory;
+  std::vector<VmaAllocation> depthImageAlloc;
+  std::vector<VmaAllocationInfo> depthImageAllocInfo;
+  std::vector<vk::Framebuffer> framebuffers;
 
   std::shared_ptr<SwapChain> oldSwapchain = nullptr;
 };
