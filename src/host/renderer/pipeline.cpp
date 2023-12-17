@@ -4,7 +4,7 @@
 
 namespace rn {
 
-void Pipeline::setConfig() {
+void Pipeline::config() {
 
   // will be set dynamically!
   configInfo.viewportInfo.viewportCount = 1;
@@ -66,8 +66,8 @@ void Pipeline::setConfig() {
       vk::PipelineDynamicStateCreateInfo{{}, configInfo.dynamicStateEnables};
 }
 
-void GraphicsPipeline::setConfig() {
-  Pipeline::setConfig();
+void GraphicsPipeline::config() {
+  Pipeline::config();
 
   configInfo.inputAssemblyInfo.setPrimitiveRestartEnable(VK_FALSE);
   configInfo.inputAssemblyInfo.setTopology(

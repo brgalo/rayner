@@ -52,6 +52,11 @@ public:
   std::shared_ptr<VMA> getVma() { return vma; };
   const vk::CommandPool &getGpool() const { return gPool; };
 
+
+  vk::ShaderModule createShaderModule(std::vector<char> &code);
+  void destroyShaderModule(vk::ShaderModule &module);
+
+
 private:
   std::shared_ptr<VMA> vma = nullptr;
   const std::string applicationName = "rayner";

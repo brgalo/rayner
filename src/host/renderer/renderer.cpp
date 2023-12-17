@@ -19,4 +19,11 @@ void Renderer::createCommandBuffers() {
 void Renderer::freeCommandBuffers() {
   vlkn->getDevice().freeCommandBuffers(vlkn->getGpool(), commandBuffers);
 }
+
+vk::DescriptorSetLayout Renderer::getLayout() {
+  vk::PushConstantRange range{vk::ShaderStageFlagBits::eFragment |
+                                  vk::ShaderStageFlagBits::eGeometry,
+                              0, sizeof(Consts)};
+}
+
 } 

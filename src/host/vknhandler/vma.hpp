@@ -1,5 +1,6 @@
 #pragma once
 #include "vknhandler.hpp"
+#include <vector>
 
 #ifndef VMA_H
 #define VMA_H
@@ -16,7 +17,8 @@ public:
   void destroyImage(VkImage img, VmaAllocation alloc) {
     vmaDestroyImage(vma_, img, alloc);
   };
-private:
+
+  private:
   void init();
   VmaAllocator vma_;
   const VkDevice dev;
@@ -24,9 +26,7 @@ private:
   // function for internal use only
   vk::Image createImage(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
                         vk::ImageCreateInfo createInfo,
-                        VmaAllocationCreateInfo & allocCreateInfo);
-
-
+                        VmaAllocationCreateInfo &allocCreateInfo);
 };
 
 } // namespace rn

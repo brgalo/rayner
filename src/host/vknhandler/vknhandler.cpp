@@ -1,4 +1,4 @@
-#include <memory>
+#include <cstdint>
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #include "vknhandler.hpp"
 #include <algorithm>
@@ -274,6 +274,11 @@ void VulkanHandler::createCommandPools() {
       vk::CommandPoolCreateInfo({}, queueFamilyIndices.computeFamily));
   tPool = device.createCommandPool(
       vk::CommandPoolCreateInfo({}, queueFamilyIndices.transferFamily));
+}
+
+vk::ShaderModule VulkanHandler::createShaderModule(std::vector<char> &code) {
+  return device.createShaderModule(vk::ShaderModuleCreateInfo(
+      {}, code.size(), reinterpret_cast<const uint32_t *>(code.data())));
 }
 
 } // namespace rn

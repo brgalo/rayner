@@ -1,5 +1,6 @@
 #include "vma.hpp"
 #include <stdexcept>
+#include <vector>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_structs.hpp>
 #define VMA_IMPLEMENTATION
@@ -7,19 +8,6 @@
 #include "vk_mem_alloc.h"
 
 namespace rn {
-
-
-vk::Image VMA::createImage(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
-                           vk::ImageCreateInfo createInfo, VmaAllocationCreateInfo & allocCreateInfo) {
-  VkImageCreateInfo temp(createInfo);
-  VkImage imgTemp;
-  auto res = vmaCreateImage(vma_, &temp, &allocCreateInfo, &imgTemp, &alloc,
-                            &allocInfo);
-  if (res != VK_SUCCESS) {
-    throw std::runtime_error("failed to create Image!");
-  }
-  return imgTemp;  
-                           }
 
 VMA::VMA(VulkanHandler *vkn_, VmaVulkanFunctions fun) : dev(vkn_->getDevice()) {
   VmaAllocatorCreateInfo info{
@@ -36,5 +24,18 @@ vk::Image VMA::creatDepthImage(VmaAllocation &alloc, VmaAllocationInfo &allocInf
                                .priority = 1.0f};
   return createImage(alloc, allocInfo, dImgInfo, info);
 }
+
+vk::Image VMA::createImage(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
+                           vk::ImageCreateInfo createInfo, VmaAllocationCreateInfo & allocCreateInfo) {
+  VkImageCreateInfo temp(createInfo);
+  VkImage imgTemp;
+  auto res = vmaCreateImage(vma_, &temp, &allocCreateInfo, &imgTemp, &alloc,
+                            &allocInfo);
+  if (res != VK_SUCCESS) {
+    throw std::runtime_error("failed to create Image!");
+  }
+  return imgTemp;
+}
+
 
 } // namespace rn

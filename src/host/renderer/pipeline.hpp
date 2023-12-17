@@ -2,7 +2,6 @@
 
 #include "vulkan/vulkan.hpp"
 #include <vulkan/vulkan_enums.hpp>
-#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 
@@ -31,22 +30,21 @@ public:
 
   Pipeline(const Pipeline &) = delete;
   Pipeline &operator=(const Pipeline &) = delete;
-  virtual void bind(vk::CommandBuffer buffer);
+  void bind(vk::CommandBuffer buffer) {
+    buffer.bindPipeline(bindPoint, pipeline_);
+  }
 protected:
-  virtual void setConfig();
+  virtual void config();
   PipelineConfigInfo configInfo;
 
   vk::Pipeline pipeline_;
 
 private:
-  void createShaderModule();
+  const vk::PipelineBindPoint bindPoint;
 };
 
 class GraphicsPipeline : protected Pipeline {
-  void setConfig() override;
-  void bind(vk::CommandBuffer buffer) final {
-    buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline_);
-  }
+  void config() override;
 };
 
 class ComputePipeline : Pipeline {
