@@ -30,6 +30,13 @@ SwapChain::SwapChain(std::shared_ptr<VulkanHandler> vulkanHandler,
 };
 
 SwapChain::~SwapChain() {
+  // destroy sync resources
+  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+    vlkn->getDevice().destroySemaphore(imageAvailableSemaphores[i]);
+    vlkn->getDevice().destroySemaphore(renderFinishedSemaphores[i]);
+    vlkn->getDevice().destroyFence(inFlightFences[i]);
+  }
+
   // destroy frambuffer
   for (auto &f : framebuffers) {
     vlkn->getDevice().destroyFramebuffer(f);
@@ -57,6 +64,7 @@ void SwapChain::init() {
   createRenderPass();
   createDepthResources();
   createFramebuffers();
+  createSynObjects();
 }
 
 void SwapChain::createSC() {
@@ -162,6 +170,22 @@ void SwapChain::createFramebuffers() {
     framebuffers.push_back(
         vlkn->getDevice().createFramebuffer(info.setAttachments(attachments)));
   }
+}
+
+void SwapChain::createSynObjects() {
+  imageAvailableSemaphores.reserve(MAX_FRAMES_IN_FLIGHT);
+  renderFinishedSemaphores.reserve(MAX_FRAMES_IN_FLIGHT);
+  inFlightFences.reserve(MAX_FRAMES_IN_FLIGHT);
+  imagesInFlight.resize(imageCount, VK_NULL_HANDLE);
+
+  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+    imageAvailableSemaphores.push_back(
+        vlkn->getDevice().createSemaphore(vk::SemaphoreCreateInfo()));
+    renderFinishedSemaphores.push_back(
+        vlkn->getDevice().createSemaphore(vk::SemaphoreCreateInfo()));
+    inFlightFences.push_back(vlkn->getDevice().createFence(
+        vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled)));
+    }
 }
 
 vk::SurfaceFormatKHR SwapChain::chooseSwapSurfaceFormat() {

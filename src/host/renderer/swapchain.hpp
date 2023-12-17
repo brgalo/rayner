@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 struct SwapChainSupportDetails {
@@ -33,6 +34,7 @@ private:
   void createRenderPass();
   void createDepthResources();
   void createFramebuffers();
+  void createSynObjects();
   vk::SurfaceFormatKHR chooseSwapSurfaceFormat();
   vk::PresentModeKHR chooseSwapPresentMode();
   vk::Extent2D chooseSwapExtent();
@@ -56,6 +58,12 @@ private:
   std::vector<VmaAllocation> depthImageAlloc;
   std::vector<VmaAllocationInfo> depthImageAllocInfo;
   std::vector<vk::Framebuffer> framebuffers;
+
+  std::vector<vk::Semaphore> imageAvailableSemaphores;
+  std::vector<vk::Semaphore> renderFinishedSemaphores;
+  std::vector<vk::Fence> imagesInFlight;
+  std::vector<vk::Fence> inFlightFences;
+
 
   std::shared_ptr<SwapChain> oldSwapchain = nullptr;
 };
