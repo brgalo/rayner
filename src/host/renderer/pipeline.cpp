@@ -66,6 +66,11 @@ void Pipeline::config() {
       vk::PipelineDynamicStateCreateInfo{{}, configInfo.dynamicStateEnables};
 }
 
+void GraphicsPipeline::init() {
+  config();
+  createLayout();
+}
+
 void GraphicsPipeline::config() {
   Pipeline::config();
 
@@ -75,12 +80,14 @@ void GraphicsPipeline::config() {
 }
 
 void GraphicsPipeline::createLayout() {
-  vk::PushConstantRange{vk::ShaderStageFlagBits::eVertex |
+  vk::PushConstantRange constRange{vk::ShaderStageFlagBits::eVertex |
                             vk::ShaderStageFlagBits::eFragment,
                         0, sizeof(RenderPushConstsData)};
 
-  // std::vector<vk::PipelineLayoutCreateInfo>{} = DesrciptorSetLayout;
-  // vk::PipelineLayoutCreateInfo
+  std::vector<vk::DescriptorSetLayout> layouts{set.getLayout()};
+  vk::PipelineLayoutCreateInfo createInfo{{}, layouts, constRange};
+  layout_ = vlkn->getDevice().createPipelineLayout(createInfo);
 }
+
 
 }

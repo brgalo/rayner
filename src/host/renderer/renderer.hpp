@@ -32,13 +32,14 @@ private:
   std::shared_ptr<VulkanHandler> vlkn = nullptr;
   Window window = Window{vlkn};
   SwapChain swapChain = SwapChain(vlkn, window);
-  GraphicsPipeline pipeline(vk::RenderPass pass);
-
   RenderDescriptors descriptors;
+  GraphicsPipeline pipeline = GraphicsPipeline(descriptors, vlkn);
+
   vk::DescriptorSetLayout getConstLayout();
 
   void createCommandBuffers();
   void freeCommandBuffers();
+  void createRenderPass();
   std::vector<vk::CommandBuffer> commandBuffers;
 };
 }

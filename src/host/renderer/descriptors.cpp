@@ -66,9 +66,6 @@ void RenderDescriptors::createSets() {
   for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
     buffers.push_back(vlkn->getVma()->createBuffer(
         allocs[i], allocInfos[i], createInfo, allocCreateInfo));
-}
-
-  //vmaMapMemory(*vlkn.getVma(),);
-
+  }
 }
 } // namespace rn

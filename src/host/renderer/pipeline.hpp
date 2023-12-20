@@ -1,6 +1,9 @@
 #pragma once
 
 #include "descriptors.hpp"
+#include "vknhandler.hpp"
+#include <memory>
+#include <vulkan/vulkan_core.h>
 
 
 
@@ -27,7 +30,9 @@ struct PipelineConfigInfo {
 
 class Pipeline {
 public:
-  Pipeline();
+  Pipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
+           std::shared_ptr<VulkanHandler> vulkn_)
+      : set(set_), bindPoint(bindP), vlkn(vulkn_) {};
   ~Pipeline();
 
   Pipeline(const Pipeline &) = delete;
@@ -35,21 +40,30 @@ public:
   void bind(vk::CommandBuffer buffer) {
     buffer.bindPipeline(bindPoint, pipeline_);
   }
+
 protected:
   virtual void config();
   virtual void createLayout();
-  PipelineConfigInfo configInfo;
+  PipelineConfigInfo configInfo = {};
 
   vk::Pipeline pipeline_;
+  std::shared_ptr<VulkanHandler> vlkn;
+  vk::PipelineLayout layout_;
 
+  DescriptorSet &set;
 private:
   const vk::PipelineBindPoint bindPoint;
-  vk::PipelineLayout layout_;
 };
 
 class GraphicsPipeline : protected Pipeline {
+public:
+  GraphicsPipeline(DescriptorSet &set_, std::shared_ptr<VulkanHandler> vlkn)
+      : Pipeline(set_, vk::PipelineBindPoint::eGraphics, vlkn) {
+    init();
+    };
   void config() override;
   void createLayout() override;
+  void init();
   RenderPushConstsData consts;
 };
 
