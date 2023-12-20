@@ -10,10 +10,6 @@
 
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
-#ifndef VMA_H
-#define VMA_H
-#include "../../../libs/VulkanMemoryAllocator/include/vk_mem_alloc.h"
-#endif
 
 namespace rn {
 
@@ -49,12 +45,12 @@ public:
   const std::shared_ptr<vk::Instance> getInstance() const { return instance; };
   const vk::PhysicalDevice &getPhysDevice() const { return physicalDevice; };
   const vk::Device &getDevice() const { return device; };
-  std::shared_ptr<VMA> getVma() { return vma; };
+  const std::shared_ptr<VMA> getVma() const { return vma; };
   const vk::CommandPool &getGpool() const { return gPool; };
 
 
   vk::ShaderModule createShaderModule(std::vector<char> &code);
-  void destroyShaderModule(vk::ShaderModule &module);
+  void destroyShaderModule(vk::ShaderModule &module); 
 
 
 private:

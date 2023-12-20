@@ -1,6 +1,6 @@
 #include "pipeline.hpp"
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_enums.hpp>
+#include <iterator>
+#include <vector>
 
 namespace rn {
 
@@ -72,6 +72,15 @@ void GraphicsPipeline::config() {
   configInfo.inputAssemblyInfo.setPrimitiveRestartEnable(VK_FALSE);
   configInfo.inputAssemblyInfo.setTopology(
       vk::PrimitiveTopology::eTriangleList);
+}
+
+void GraphicsPipeline::createLayout() {
+  vk::PushConstantRange{vk::ShaderStageFlagBits::eVertex |
+                            vk::ShaderStageFlagBits::eFragment,
+                        0, sizeof(RenderPushConstsData)};
+
+  // std::vector<vk::PipelineLayoutCreateInfo>{} = DesrciptorSetLayout;
+  // vk::PipelineLayoutCreateInfo
 }
 
 }

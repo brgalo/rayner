@@ -1,9 +1,11 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
-#include <vulkan/vulkan_enums.hpp>
+#include "descriptors.hpp"
+
+
 
 namespace rn {
+
 
 struct PipelineConfigInfo {
   PipelineConfigInfo(const PipelineConfigInfo &) = delete;
@@ -35,16 +37,20 @@ public:
   }
 protected:
   virtual void config();
+  virtual void createLayout();
   PipelineConfigInfo configInfo;
 
   vk::Pipeline pipeline_;
 
 private:
   const vk::PipelineBindPoint bindPoint;
+  vk::PipelineLayout layout_;
 };
 
 class GraphicsPipeline : protected Pipeline {
   void config() override;
+  void createLayout() override;
+  RenderPushConstsData consts;
 };
 
 class ComputePipeline : Pipeline {

@@ -34,4 +34,5 @@ target_link_libraries(app PRIVATE   vknhandler
 
 include_directories(src/host/renderer/
                     src/host/vknhandler/
-                    srx/host/)
+                    src/host/
+                    libs/VulkanMemoryAllocator/include)

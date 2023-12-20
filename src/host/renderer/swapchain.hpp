@@ -5,7 +5,8 @@
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_handles.hpp>
+
+#include "vk_mem_alloc.h"
 
 namespace rn {
 struct SwapChainSupportDetails {

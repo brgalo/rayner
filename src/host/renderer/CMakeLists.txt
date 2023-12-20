@@ -8,10 +8,14 @@ add_library(renderer renderer.cpp
                      swapchain.hpp)
 
 add_library(pipeline pipeline.cpp
-                     pipeline.hpp)
+                     pipeline.hpp
+                     descriptors.hpp
+                     descriptors.cpp)
 
-include_directories(/../../libs/Vulkan-Hpp/glfw/include
-                    ../vknhandler)
+include_directories(../../libs/Vulkan-Hpp/glfw/include
+                    ../vknhandler
+                    ../../../libs/VulkanMemoryAllocator/include
+                    .)
 target_link_libraries(renderer PRIVATE Vulkan::Vulkan
                                        glfw
                                        pipeline)

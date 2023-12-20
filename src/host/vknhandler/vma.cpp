@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan_handles.hpp>
 #include <vulkan/vulkan_structs.hpp>
 #define VMA_IMPLEMENTATION
 
@@ -37,5 +38,18 @@ vk::Image VMA::createImage(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
   return imgTemp;
 }
 
+vk::Buffer VMA::createBuffer(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
+                             VkBufferCreateInfo &createInfo,
+                             VmaAllocationCreateInfo &allocCreateInfo) {
+  VkBufferCreateInfo bufInf = createInfo;
+  VkBuffer temp;
+  vmaCreateBuffer(vma_, &bufInf, &allocCreateInfo, &temp, &alloc, &allocInfo);
+  return temp;
+}
+
+void VMA::destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer) {
+  VkBuffer temp = buffer;
+  vmaDestroyBuffer(vma_, temp, alloc);
+}
 
 } // namespace rn
