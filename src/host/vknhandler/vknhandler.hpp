@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -10,6 +11,10 @@
 
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
+#ifndef VMA_H
+#define VMA_H
+#include "vk_mem_alloc.h"
+#endif
 
 namespace rn {
 
@@ -47,9 +52,12 @@ public:
   const vk::Device &getDevice() const { return device; };
   const std::shared_ptr<VMA> getVma() const { return vma; };
   const vk::CommandPool &getGpool() const { return gPool; };
+  const vk::CommandPool &getTpool() const { return tPool; };
+
+  const vk::Queue &getTqueue() const { return tQueue; };
 
 
-  vk::ShaderModule createShaderModule(std::vector<char> &code);
+  vk::ShaderModule createShaderModule(std::vector<char> code);
   void destroyShaderModule(vk::ShaderModule &module); 
 
 
@@ -74,9 +82,9 @@ private:
   void createDebugCallback();
   void pickPhysicalDevice();
   void createLogicalDevice();
-  void createVMA();
   void createQueues();
   void createCommandPools();
+  void createVMA();
 
   // helpers
   std::vector<char const *>

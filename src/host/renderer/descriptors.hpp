@@ -8,8 +8,6 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan_enums.hpp>
-#include <vulkan/vulkan_handles.hpp>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

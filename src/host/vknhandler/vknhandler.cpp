@@ -46,14 +46,14 @@ VulkanHandler::VulkanHandler() {
   createDebugCallback();
   pickPhysicalDevice();
   createLogicalDevice();
+  createQueues();
+  createCommandPools();
   vma = std::make_shared<VMA>(
       this, VmaVulkanFunctions{
                 .vkGetInstanceProcAddr =
                     VULKAN_HPP_DEFAULT_DISPATCHER.vkGetInstanceProcAddr,
                 .vkGetDeviceProcAddr =
                     VULKAN_HPP_DEFAULT_DISPATCHER.vkGetDeviceProcAddr});
-  createQueues();
-  createCommandPools();
 }
 
 VulkanHandler::~VulkanHandler() {
@@ -276,9 +276,13 @@ void VulkanHandler::createCommandPools() {
       vk::CommandPoolCreateInfo({}, queueFamilyIndices.transferFamily));
 }
 
-vk::ShaderModule VulkanHandler::createShaderModule(std::vector<char> &code) {
+vk::ShaderModule VulkanHandler::createShaderModule(std::vector<char> code) {
   return device.createShaderModule(vk::ShaderModuleCreateInfo(
       {}, code.size(), reinterpret_cast<const uint32_t *>(code.data())));
+}
+
+void VulkanHandler::destroyShaderModule(vk::ShaderModule &module) {
+  device.destroyShaderModule(module);
 }
 
 } // namespace rn

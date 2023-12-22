@@ -1,2 +1,3 @@
 add_subdirectory(renderer)
 add_subdirectory(vknhandler)
+add_subdirectory(geometryloader)

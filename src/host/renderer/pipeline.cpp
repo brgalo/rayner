@@ -1,6 +1,9 @@
 #include "pipeline.hpp"
 #include <iterator>
+#include <string>
 #include <vector>
+#include <fstream>
+#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 
@@ -69,7 +72,42 @@ void Pipeline::config() {
 void GraphicsPipeline::init() {
   config();
   createLayout();
+
+  // shader modules
+  vk::ShaderModule triVertex = createModule("spv/tri.vert.spv");
+  vk::ShaderModule triFragme = createModule("spv/tri.frag.spv");
+
+  std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages{
+      {{{}, vk::ShaderStageFlagBits::eVertex, triVertex, "main"},
+       {{}, vk::ShaderStageFlagBits::eFragment, triFragme, "main"}}};
+
+  Pipeline::create();
+
+  destroyModule(triVertex);
+  destroyModule(triFragme);
 }
+
+vk::ShaderModule Pipeline::createModule(const std::string &filepath) {
+  return vlkn->createShaderModule(readFile(filepath));
+}
+
+void Pipeline::destroyModule(vk::ShaderModule module) {
+  vlkn->destroyShaderModule(module);
+}
+
+std::vector<char> Pipeline::readFile(const std::string &filepath) {
+  std::ifstream shadercode{filepath, std::ios::ate | std::ios::binary};
+  if (!shadercode.is_open()) {
+    std::runtime_error("failed to open file: " + filepath);
+  }
+  size_t size = static_cast<size_t>(shadercode.tellg());
+  std::vector<char> buffer(size);
+
+  shadercode.seekg(0);
+  shadercode.read(buffer.data(), size);
+  shadercode.close();
+  return buffer;  
+};
 
 void GraphicsPipeline::config() {
   Pipeline::config();
@@ -89,5 +127,14 @@ void GraphicsPipeline::createLayout() {
   layout_ = vlkn->getDevice().createPipelineLayout(createInfo);
 }
 
+void Pipeline::createRenderPass() {
+
+}
+
+void Pipeline::create() {
+
+
+  //vk::GraphicsPipelineCreateInfo createInfo{{},shaderStages,{{},configInfo.},configInfo.inputAssemblyInfo,}
+}
 
 }

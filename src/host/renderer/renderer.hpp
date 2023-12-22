@@ -33,7 +33,7 @@ private:
   Window window = Window{vlkn};
   SwapChain swapChain = SwapChain(vlkn, window);
   RenderDescriptors descriptors;
-  GraphicsPipeline pipeline = GraphicsPipeline(descriptors, vlkn);
+  GraphicsPipeline pipeline = GraphicsPipeline(descriptors, vlkn,swapChain.getRenderPasses());
 
   vk::DescriptorSetLayout getConstLayout();
 

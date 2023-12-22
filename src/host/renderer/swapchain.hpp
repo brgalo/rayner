@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_handles.hpp>
 
 #include "vk_mem_alloc.h"
 
@@ -26,6 +27,9 @@ public:
   SwapChain &operator=(const SwapChain &) = delete;
   const vk::SwapchainKHR &getSwapchain() const {return swapChain;};
 
+  std::array<vk::RenderPass,2> getRenderPasses() {
+    return {renderPassTriangles, renderPassLines};
+  };
 
 private:
   const Window &window;

@@ -1,8 +1,6 @@
 #include "renderer.hpp"
 #include "swapchain.hpp"
 #include <memory>
-#include <vulkan/vulkan_enums.hpp>
-#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 Renderer::~Renderer() {
