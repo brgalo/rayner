@@ -37,6 +37,7 @@ public:
            std::shared_ptr<VulkanHandler> vulkn_)
       : set(set_), bindPoint(bindP), vlkn(vulkn_) {};
   ~Pipeline() {
+    vlkn->getDevice().destroyPipeline(pipeline_);
     vlkn->getDevice().destroyPipelineLayout(layout_);
   };
 

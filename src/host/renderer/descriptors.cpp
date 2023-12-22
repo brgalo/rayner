@@ -36,9 +36,9 @@ void DescriptorSet::createPool() {
   pool = vlkn->getDevice().createDescriptorPool(createInfo);
 }
 
-void DescriptorSet::addBinding(uint32_t bindingNo, vk::DescriptorType type, vk::ShaderStageFlags,
+void DescriptorSet::addBinding(uint32_t bindingNo, vk::DescriptorType type, vk::ShaderStageFlags stage,
                 uint32_t count) {
-  vk::DescriptorSetLayoutBinding binding{bindingNo, type, count};
+  vk::DescriptorSetLayoutBinding binding{bindingNo, type, count,stage};
   assert(bindings.count(bindingNo) == 0 && "Binding already taken!");
   bindings[bindingNo] = binding;
 }

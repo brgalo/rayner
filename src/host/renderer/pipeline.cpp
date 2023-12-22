@@ -1,9 +1,10 @@
 #include "pipeline.hpp"
+#include "geometryloader/geometry.hpp"
 #include <iterator>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <fstream>
-#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 
@@ -80,9 +81,29 @@ void GraphicsPipeline::init() {
   std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages{
       {{{}, vk::ShaderStageFlagBits::eVertex, triVertex, "main"},
        {{}, vk::ShaderStageFlagBits::eFragment, triFragme, "main"}}};
+  auto inputDesc = GeometryHandler::getInputDescription();
+  auto inputAttr = GeometryHandler::getAttributeDescription();
+  vk::PipelineVertexInputStateCreateInfo vertexInfo{{}, inputDesc, inputAttr};
 
-  Pipeline::create();
-
+  vk::GraphicsPipelineCreateInfo createInfo{{},
+                                            shaderStages,
+                                            &vertexInfo,
+                                            &configInfo.inputAssemblyInfo,
+                                            nullptr,
+                                            &configInfo.viewportInfo,
+                                            &configInfo.rasterizationInfo,
+                                            &configInfo.multisampleInfo,
+                                            &configInfo.depthStencilInfo,
+                                            &configInfo.colorBlendInfo,
+                                            &configInfo.dynamicStateInfo,
+                                            layout_,
+                                            triangleRenderPass,
+                                            configInfo.subpass};
+  auto res = vlkn->getDevice().createGraphicsPipeline(nullptr, createInfo);
+  if (res.result != vk::Result::eSuccess) {
+    throw std::runtime_error("failed to create Pipeline!");
+  }
+  pipeline_ = res.value;
   destroyModule(triVertex);
   destroyModule(triFragme);
 }
