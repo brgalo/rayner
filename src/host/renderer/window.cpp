@@ -26,8 +26,8 @@ void Window::frameBufferResizedCallback(GLFWwindow *pWindow, int width,
                                         int height) {
   auto window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(pWindow));
   window->windowResized = true;
-  window->width = width;
-  window->height = height;
+  window->extent.setWidth(width);
+  window->extent.setHeight(height);
 }
 
 Window::Window(std::shared_ptr<VulkanHandler> vlkn)
@@ -52,12 +52,14 @@ void Window::createSurface(vk::Instance instance) {
   surface = vk::SurfaceKHR(_surface);
 }
 
-void Window::createWindow(uint32_t width, uint32_t height) {
+void Window::createWindow(uint32_t width_, uint32_t height_) {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-  window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, window);
+  window = glfwCreateWindow(width_, height_, windowName.c_str(), nullptr, window);
   glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, frameBufferResizedCallback);
+  extent.setWidth(width_);
+  extent.setHeight(height_);
 }
 
 void Window::initWindowAndSwapchain() {

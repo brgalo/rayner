@@ -54,6 +54,7 @@ public:
   const vk::CommandPool &getGpool() const { return gPool; };
   const vk::CommandPool &getTpool() const { return tPool; };
 
+  const vk::Queue &getGqueue() const { return gQueue; };
   const vk::Queue &getTqueue() const { return tQueue; };
 
 

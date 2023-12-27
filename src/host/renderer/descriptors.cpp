@@ -4,14 +4,14 @@
 #include "vma.hpp"
 
 // std
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
+#include <cstring>
+#include <glm/fwd.hpp>
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_structs.hpp>
-
 namespace rn {
 
 DescriptorSet::~DescriptorSet() {
@@ -26,8 +26,15 @@ void DescriptorSet::freeSets() {
   vlkn->getDevice().freeDescriptorSets(pool, sets);
 }
 
-void DescriptorSet::updateSets() {
-  
+void RenderDescriptors::updateSets() {
+  std::array<vk::WriteDescriptorSet, SwapChain::MAX_FRAMES_IN_FLIGHT> writes{};
+  std::array<vk::DescriptorBufferInfo, writes.size()> infos{};
+  for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
+    infos[i] = vk::DescriptorBufferInfo{buffers[i], 0, VK_WHOLE_SIZE};
+    writes[i] = {sets[i], 0,         0, 1, vk::DescriptorType::eUniformBuffer,
+                 nullptr, &infos[i]};
+  }
+  vlkn->getDevice().updateDescriptorSets(writes, nullptr);
 }
 
 void DescriptorSet::createPool() {
@@ -48,10 +55,15 @@ void DescriptorSet::createSets() {
   for (auto &b : bindings) {
     layoutB.push_back(b.second);
   }
+
   layout = vlkn->getDevice().createDescriptorSetLayout(
       vk::DescriptorSetLayoutCreateInfo{{}, layoutB});
+  std::array<vk::DescriptorSetLayout, SwapChain::MAX_FRAMES_IN_FLIGHT>
+      layouts{layout, layout};
 
-  sets = vlkn->getDevice().allocateDescriptorSets({pool, layout});
+  vk::DescriptorSetAllocateInfo info{pool, layouts};
+  sets = vlkn->getDevice().allocateDescriptorSets(info);
+
 }
 
 void RenderDescriptors::createSets() {
@@ -68,4 +80,5 @@ void RenderDescriptors::createSets() {
         allocs[i], allocInfos[i], createInfo, allocCreateInfo));
   }
 }
+
 } // namespace rn

@@ -1,5 +1,6 @@
 #pragma once
 #include "descriptors.hpp"
+#include <glm/fwd.hpp>
 #define GLM_FORCE_RADIANS
 #include "glm/glm.hpp"
 
@@ -20,22 +21,26 @@ struct Consts {
 class Renderer {
 public:
   Renderer(std::shared_ptr<VulkanHandler> vlkn_) : vlkn(vlkn_), descriptors(vlkn_){
+    consts.mat = glm::mat4{1.0f};
     createCommandBuffers();
+
   };
 
   ~Renderer();
 
   Renderer(const Renderer &) = delete;
   Renderer &operator=(const Renderer &) = delete;
-
+  void render(vk::Buffer vert);
 private:
   std::shared_ptr<VulkanHandler> vlkn = nullptr;
   Window window = Window{vlkn};
   SwapChain swapChain = SwapChain(vlkn, window);
   RenderDescriptors descriptors;
-  GraphicsPipeline pipeline = GraphicsPipeline(descriptors, vlkn,swapChain.getRenderPasses());
+  GraphicsPipeline pipeline =
+      GraphicsPipeline(descriptors, vlkn, swapChain.getRenderPasses());
+  Consts consts{};
 
-  vk::DescriptorSetLayout getConstLayout();
+  //vk::DescriptorSetLayout getConstLayout();
 
   void createCommandBuffers();
   void freeCommandBuffers();

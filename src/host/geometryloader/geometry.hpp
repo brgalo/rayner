@@ -22,6 +22,7 @@ public:
   static std::vector<vk::VertexInputBindingDescription> getInputDescription();
   static std::vector<vk::VertexInputAttributeDescription>
   getAttributeDescription();
+  vk::Buffer getVert() { return vertex; };
 
   std::shared_ptr<VMA> vma = nullptr;
 struct VertexPC

@@ -6,10 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_enums.hpp>
-#include <vulkan/vulkan_handles.hpp>
-#include <vulkan/vulkan_structs.hpp>
+#include <vulkan/vulkan.hpp>
 
 #include "vma.hpp"
 
@@ -111,12 +108,12 @@ void SwapChain::createRenderPass() {
       {}, depthFormat, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear,
       vk::AttachmentStoreOp::eDontCare, vk::AttachmentLoadOp::eDontCare,
       vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined,
-      vk::ImageLayout::eDepthStencilAttachmentOptimal);
+      vk::ImageLayout::eDepthStencilAttachmentOptimal );
   attDescr[0] = colorAttachment;
 
   colorAttachment.setFormat(surfaceFormat.format);
   colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);
-  colorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+  colorAttachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
 
   attDescr[1] = colorAttachment;
 
@@ -255,5 +252,15 @@ SwapChainSupportDetails SwapChain::querySwapChainSupport() {
   details.presentModes =
       vlkn->getPhysDevice().getSurfacePresentModesKHR(window.getSurface());
   return details;
+}
+
+uint32_t SwapChain::aquireNextImage(vk::Fence fence, vk::Semaphore sema) {
+  auto disc = vlkn->getDevice().waitForFences(fence, vk::True, std::numeric_limits<uint64_t>::max());
+  auto res = vlkn->getDevice().acquireNextImageKHR(swapChain, std::numeric_limits<uint64_t>::max(), sema,
+                                                   VK_NULL_HANDLE, &currImg);
+  if (res == vk::Result::eErrorOutOfDateKHR) {
+    // Todo!
+  }
+  return currImg;
 }
 } // namespace rn

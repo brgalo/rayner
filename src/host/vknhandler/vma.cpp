@@ -1,7 +1,6 @@
 #include "vma.hpp"
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_enums.hpp>
 #include <vulkan/vulkan_handles.hpp>
 #include <vulkan/vulkan_structs.hpp>

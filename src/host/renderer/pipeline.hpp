@@ -48,6 +48,8 @@ public:
   }
   vk::ShaderModule createModule(const std::string &filepath);
   void destroyModule(vk::ShaderModule);
+  vk::Pipeline get() { return pipeline_; };
+  vk::PipelineLayout getLayout() { return layout_; };
 
 protected:
   virtual void config();
@@ -66,7 +68,7 @@ private:
   std::vector<char> readFile(const std::string &filepath);
 };
 
-class GraphicsPipeline : protected Pipeline {
+class GraphicsPipeline : public Pipeline {
 public:
   GraphicsPipeline(DescriptorSet &set_, std::shared_ptr<VulkanHandler> vlkn,
                    std::array<vk::RenderPass,2> renderPasses)

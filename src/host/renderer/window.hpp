@@ -35,9 +35,6 @@ private:
   vk::Extent2D extent;
   static void frameBufferResizedCallback(GLFWwindow *window, int width,
                                          int height);
-
-  uint32_t width ;
-  uint32_t height;
   bool windowResized = false;
 
   std::string windowName = "RYNR v0.1";

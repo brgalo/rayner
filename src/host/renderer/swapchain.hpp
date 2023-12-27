@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_handles.hpp>
 
 #include "vk_mem_alloc.h"
 
@@ -31,6 +29,13 @@ public:
     return {renderPassTriangles, renderPassLines};
   };
 
+  vk::Framebuffer getFramebuffer() { return framebuffers.front(); };
+  std::vector<vk::Semaphore> imageAvailableSemaphores;
+  std::vector<vk::Semaphore> renderFinishedSemaphores;
+  std::vector<vk::Fence> imagesInFlight;
+  std::vector<vk::Fence> inFlightFences;
+  void resetFences();
+  uint32_t aquireNextImage(vk::Fence fence, vk::Semaphore sema);
 private:
   const Window &window;
   void init();
@@ -64,10 +69,9 @@ private:
   std::vector<VmaAllocationInfo> depthImageAllocInfo;
   std::vector<vk::Framebuffer> framebuffers;
 
-  std::vector<vk::Semaphore> imageAvailableSemaphores;
-  std::vector<vk::Semaphore> renderFinishedSemaphores;
-  std::vector<vk::Fence> imagesInFlight;
-  std::vector<vk::Fence> inFlightFences;
+  uint32_t currImg = 0;
+
+
 
 
   std::shared_ptr<SwapChain> oldSwapchain = nullptr;

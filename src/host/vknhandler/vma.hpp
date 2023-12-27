@@ -1,7 +1,6 @@
 #pragma once
 #include "vknhandler.hpp"
 #include <vector>
-#include <vulkan/vulkan_structs.hpp>
 
 #ifndef VMA_H
 #define VMA_H
