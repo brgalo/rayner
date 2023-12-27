@@ -44,7 +44,6 @@ private:
 
   void createCommandBuffers();
   void freeCommandBuffers();
-  void createRenderPass();
   std::vector<vk::CommandBuffer> commandBuffers;
 };
 }

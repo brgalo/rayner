@@ -38,8 +38,7 @@ void Pipeline::config() {
       vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
       vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
   configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
-  configInfo.colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eOne;
-  configInfo.colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eZero;
+   configInfo.colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eZero;
   configInfo.colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
   configInfo.colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
   configInfo.colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
@@ -146,10 +145,6 @@ void GraphicsPipeline::createLayout() {
   std::vector<vk::DescriptorSetLayout> layouts{set.getLayout()};
   vk::PipelineLayoutCreateInfo createInfo{{}, layouts, constRange};
   layout_ = vlkn->getDevice().createPipelineLayout(createInfo);
-}
-
-void Pipeline::createRenderPass() {
-
 }
 
 void Pipeline::create() {

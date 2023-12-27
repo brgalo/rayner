@@ -26,8 +26,8 @@ void Renderer::render(vk::Buffer vert) {
   auto &buffer = commandBuffers.front();
   buffer.begin(vk::CommandBufferBeginInfo{});
   std::array<vk::ClearValue, 2> clearVals{
-      {vk::ClearColorValue{0.01f, 0.01f, 0.01f, 1.0f},
-       vk::ClearDepthStencilValue{1.0f, 0}}};
+      {vk::ClearDepthStencilValue{1.0f, 0},
+       vk::ClearColorValue{0.01f, 0.01f, 0.01f, 1.0f}}};
   vk::RenderPassBeginInfo beginInfo{pipeline.triangleRenderPass,
                                     swapChain.getFramebuffer(),
                                     {vk::Offset2D{0, 0}, window.getExtent()},
@@ -45,7 +45,7 @@ void Renderer::render(vk::Buffer vert) {
   buffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(1000),
                                      static_cast<float>(500), 0.0f, 1.0f));
   buffer.setScissor(0, vk::Rect2D(vk::Offset2D{0, 0}, window.getExtent()));
-  buffer.draw(12 * 3, 1, 0, 0);
+  buffer.draw(3, 1, 0, 0);
   buffer.endRenderPass();
   buffer.end();
 
@@ -67,6 +67,6 @@ void Renderer::render(vk::Buffer vert) {
 
   auto res = vlkn->getGqueue().presentKHR(presentInfo);
   vlkn->getDevice().waitIdle();
-}
+}S
 }
  

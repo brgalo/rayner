@@ -55,7 +55,6 @@ protected:
   virtual void config();
   virtual void createLayout(){};
   virtual void create();
-  virtual void createRenderPass();
   PipelineConfigInfo configInfo = {};
 
   vk::Pipeline pipeline_;

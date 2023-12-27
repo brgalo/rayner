@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_structs.hpp>
 
 #include "vma.hpp"
 
@@ -104,17 +105,18 @@ void SwapChain::createImageViews() {
 void SwapChain::createRenderPass() {
   std::array<vk::AttachmentDescription, 2> attDescr;
 
-  vk::AttachmentDescription colorAttachment(
+  vk::AttachmentDescription depthAttachment(
       {}, depthFormat, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear,
       vk::AttachmentStoreOp::eDontCare, vk::AttachmentLoadOp::eDontCare,
-      vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined,
+      vk::AttachmentStoreOp::eStore, vk::ImageLayout::eUndefined,
       vk::ImageLayout::eDepthStencilAttachmentOptimal );
-  attDescr[0] = colorAttachment;
+  attDescr[0] = depthAttachment;
 
-  colorAttachment.setFormat(surfaceFormat.format);
-  colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);
-  colorAttachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
-
+vk::AttachmentDescription colorAttachment(
+    {}, surfaceFormat.format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear,
+    vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare,
+    vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined,
+    vk::ImageLayout::ePresentSrcKHR);
   attDescr[1] = colorAttachment;
 
   vk::AttachmentReference depthRef{
