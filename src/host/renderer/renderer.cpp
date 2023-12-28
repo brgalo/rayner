@@ -1,13 +1,29 @@
 #include "renderer.hpp"
+#include "descriptors.hpp"
 #include "swapchain.hpp"
+#include "window.hpp"
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_core.h>
 
 namespace rn {
 Renderer::~Renderer() {
   freeCommandBuffers();
+}
+
+bool Renderer::run() {
+  // poll inputs
+  window.poll();
+  if (window.shouldClose())
+    return false;
+  if (window.wasResized()) {
+    swapChain.recreate();
+  }
+
+  return true;
 }
 
 void Renderer::createCommandBuffers() {
@@ -22,7 +38,11 @@ void Renderer::freeCommandBuffers() {
 }
 
 void Renderer::render(vk::Buffer vert) {
-  uint32_t idx = swapChain.aquireNextImage(swapChain.inFlightFences.front(),swapChain.imageAvailableSemaphores.front());
+  auto idx =
+      swapChain.aquireNextImage(swapChain.inFlightFences.front(),
+                                swapChain.imageAvailableSemaphores.front());
+  if (!idx.has_value() || window.wasResized()) swapChain.recreate();
+
   auto &buffer = commandBuffers.front();
   buffer.begin(vk::CommandBufferBeginInfo{});
   std::array<vk::ClearValue, 2> clearVals{
@@ -42,8 +62,8 @@ void Renderer::render(vk::Buffer vert) {
                             pipeline.getLayout(), 0,
                             descriptors.getSets().front(), nullptr);
   buffer.bindVertexBuffers(0, vert, {0});
-  buffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(1000),
-                                     static_cast<float>(500), 0.0f, 1.0f));
+  buffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(swapChain.getExtent().width),
+                                     static_cast<float>(swapChain.getExtent().height), 0.0f, 1.0f));
   buffer.setScissor(0, vk::Rect2D(vk::Offset2D{0, 0}, window.getExtent()));
   buffer.draw(3, 1, 0, 0);
   buffer.endRenderPass();
@@ -63,10 +83,14 @@ void Renderer::render(vk::Buffer vert) {
   vlkn->getGqueue().submit(submitInfo, swapChain.inFlightFences.front());
   uint32_t n = 0;
   vk::PresentInfoKHR presentInfo{swapChain.renderFinishedSemaphores.front(),
-                                 swapChain.getSwapchain(), idx};
+                                 swapChain.getSwapchain(), idx.value()};
 
   auto res = vlkn->getGqueue().presentKHR(presentInfo);
+  if (res == vk::Result::eErrorOutOfDateKHR) {
+    swapChain.recreate();
+    return;
+  }
   vlkn->getDevice().waitIdle();
-}S
+} 
 }
  

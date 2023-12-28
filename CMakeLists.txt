@@ -27,17 +27,14 @@ add_subdirectory(libs/VulkanMemoryAllocator)
 include_directories(src/host/renderer/
                     src/host/vknhandler/
                     src/host/
+                    src/host
                     libs/VulkanMemoryAllocator/include)
 
 add_subdirectory(src/host)
 
 add_executable(app main.cpp)
 
-target_link_libraries(app PRIVATE   vknhandler
-                                    renderer
-                                    Vulkan::Vulkan
-                                    glfw
-                                    geometry)
+target_link_libraries(app PRIVATE   rayner)
 
 
 

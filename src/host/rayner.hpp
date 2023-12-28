@@ -7,7 +7,8 @@
 namespace rn {
 class Rayner {
 public:
-  Rayner() { renderer.render(geom.getVert()); }
+  Rayner() {};
+  void run();
 private:
   std::shared_ptr<VulkanHandler> vlkn = std::make_shared<VulkanHandler>();
   GeometryHandler geom{vlkn->getVma()};

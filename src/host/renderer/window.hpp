@@ -24,7 +24,14 @@ public:
   const vk::SurfaceKHR getSurface() const {return surface;};
 
   static std::vector<const char *> getGlfwExtensions();
-  const vk::Extent2D& getExtent() const {return extent;};
+  const vk::Extent2D getExtent() const {
+    int width = 0, height = 0;
+    glfwGetWindowSize(window, &width, &height);
+    return vk::Extent2D(width, height);
+  };
+  bool shouldClose() { return glfwWindowShouldClose(window); };
+  bool wasResized() { return windowResized; }
+  void poll() { glfwPollEvents(); };
 
 private:
   std::shared_ptr<vk::Instance> instance;

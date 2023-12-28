@@ -1,10 +1,11 @@
-#include "src/host/rayner.hpp"
+#include "rayner.hpp"
 #include <cstdlib>
 #include <iostream>
 
 int main(int argc, char *argv[]) {
   try {
     rn::Rayner ray;
+    ray.run();
   } catch (vk::SystemError &err) {
     std::cout << "vk::SystemError: " << err.what() << std::endl;
     exit(-1);

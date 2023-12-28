@@ -3,7 +3,9 @@
 #include "window.hpp"
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
+#include <vulkan/vulkan_handles.hpp>
 
 #include "vk_mem_alloc.h"
 
@@ -21,9 +23,7 @@ public:
             const Window &window);
   ~SwapChain();
 
-  SwapChain(const SwapChain &) = delete;
-  SwapChain &operator=(const SwapChain &) = delete;
-  const vk::SwapchainKHR &getSwapchain() const {return swapChain;};
+  const vk::SwapchainKHR &getSwapchain() const {return swapchain;};
 
   std::array<vk::RenderPass,2> getRenderPasses() {
     return {renderPassTriangles, renderPassLines};
@@ -35,11 +35,15 @@ public:
   std::vector<vk::Fence> imagesInFlight;
   std::vector<vk::Fence> inFlightFences;
   void resetFences();
-  uint32_t aquireNextImage(vk::Fence fence, vk::Semaphore sema);
+  std::optional<uint32_t> aquireNextImage(vk::Fence fence, vk::Semaphore sema);
+  void recreate();
+
+  vk::Extent2D getExtent() { return extent; };
 private:
   const Window &window;
   void init();
-  void createSC();
+  void createSC(std::shared_ptr<SwapChain> old);
+
   void createImageViews();
   void createRenderPass();
   void createDepthResources();
@@ -58,7 +62,7 @@ private:
   vk::PresentModeKHR presentMode;
   uint32_t imageCount;
 
-  vk::SwapchainKHR swapChain;
+  vk::SwapchainKHR swapchain;
   vk::RenderPass renderPassLines;
   vk::RenderPass renderPassTriangles;
   std::vector<vk::Image> scImages;
@@ -70,10 +74,5 @@ private:
   std::vector<vk::Framebuffer> framebuffers;
 
   uint32_t currImg = 0;
-
-
-
-
-  std::shared_ptr<SwapChain> oldSwapchain = nullptr;
 };
 } // namespace rn

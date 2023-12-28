@@ -4,11 +4,13 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_structs.hpp>
 
+#include "GLFW/glfw3.h"
 #include "vma.hpp"
 
 namespace rn {
@@ -53,11 +55,11 @@ SwapChain::~SwapChain() {
   for (auto &iv : scImageViews) {
     vlkn->getDevice().destroyImageView(iv);
   }
-  vlkn->getDevice().destroySwapchainKHR(swapChain);
+  vlkn->getDevice().destroySwapchainKHR(swapchain);
 }
 
 void SwapChain::init() {
-  createSC();
+  createSC(nullptr);
   createImageViews();
   createRenderPass();
   createDepthResources();
@@ -65,7 +67,7 @@ void SwapChain::init() {
   createSynObjects();
 }
 
-void SwapChain::createSC() {
+void SwapChain::createSC(std::shared_ptr<SwapChain> old) {
   querySwapChainSupport();
   surfaceFormat = chooseSwapSurfaceFormat();
   presentMode = chooseSwapPresentMode();
@@ -78,7 +80,7 @@ void SwapChain::createSC() {
     imageCount = details.capabilities.maxImageCount;
   }
   auto tempSwap =
-      oldSwapchain == nullptr ? VK_NULL_HANDLE : oldSwapchain->getSwapchain();
+      old == nullptr ? VK_NULL_HANDLE : old->getSwapchain();
 
   vk::SwapchainCreateInfoKHR createInfo(
       {}, window.getSurface(), imageCount, surfaceFormat.format,
@@ -86,8 +88,8 @@ void SwapChain::createSC() {
       vk::ImageUsageFlagBits::eColorAttachment, vk::SharingMode::eExclusive, {},
       nullptr, details.capabilities.currentTransform,
       vk::CompositeAlphaFlagBitsKHR::eOpaque, presentMode, true, tempSwap);
-  swapChain = vlkn->getDevice().createSwapchainKHR(createInfo);
-  scImages = vlkn->getDevice().getSwapchainImagesKHR(swapChain);
+  swapchain = vlkn->getDevice().createSwapchainKHR(createInfo);
+  scImages = vlkn->getDevice().getSwapchainImagesKHR(swapchain);
   imageCount = scImages.size();
 }
 
@@ -161,7 +163,8 @@ void SwapChain::createDepthResources() {
 
 void SwapChain::createFramebuffers() {
   framebuffers.reserve(imageCount);
-  vk::FramebufferCreateInfo info{
+  extent = window.getExtent();
+  vk::FramebufferCreateInfo info {
       {}, renderPassTriangles, {}, extent.width, extent.height, 1};
   for (size_t i = 0; i < imageCount; ++i) {
     std::vector<vk::ImageView> attachments = {depthImageViews[i],
@@ -256,13 +259,34 @@ SwapChainSupportDetails SwapChain::querySwapChainSupport() {
   return details;
 }
 
-uint32_t SwapChain::aquireNextImage(vk::Fence fence, vk::Semaphore sema) {
+std::optional<uint32_t> SwapChain::aquireNextImage(vk::Fence fence, vk::Semaphore sema) {
   auto disc = vlkn->getDevice().waitForFences(fence, vk::True, std::numeric_limits<uint64_t>::max());
-  auto res = vlkn->getDevice().acquireNextImageKHR(swapChain, std::numeric_limits<uint64_t>::max(), sema,
+  auto res = vlkn->getDevice().acquireNextImageKHR(swapchain, std::numeric_limits<uint64_t>::max(), sema,
                                                    VK_NULL_HANDLE, &currImg);
   if (res == vk::Result::eErrorOutOfDateKHR) {
-    // Todo!
+    recreate();
+    return std::optional<uint32_t>(std::nullopt);
   }
+  
   return currImg;
+}
+
+void SwapChain::recreate() {
+  bool hasChanged = false;
+  extent = window.getExtent();
+  // dont render while window is minimized!
+  while (extent.width == 0 || extent.height == 0) {
+    extent = window.getExtent();
+    glfwWaitEvents();
+  }
+
+  vlkn->getDevice().waitIdle();
+  if (swapchain == nullptr) {
+
+  } else {
+    hasChanged = true;
+    std::shared_ptr<SwapChain> old = std::make_shared<SwapChain>(*this);
+    init();
+  }
 }
 } // namespace rn

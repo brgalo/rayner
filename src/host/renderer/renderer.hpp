@@ -27,7 +27,7 @@ public:
   };
 
   ~Renderer();
-
+  bool run();
   Renderer(const Renderer &) = delete;
   Renderer &operator=(const Renderer &) = delete;
   void render(vk::Buffer vert);
@@ -44,6 +44,7 @@ private:
 
   void createCommandBuffers();
   void freeCommandBuffers();
+  void recreateSwapchain();
   std::vector<vk::CommandBuffer> commandBuffers;
 };
 }
