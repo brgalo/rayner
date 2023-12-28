@@ -269,9 +269,9 @@ void VulkanHandler::createQueues() {
 
 void VulkanHandler::createCommandPools() {
   gPool = device.createCommandPool(
-      vk::CommandPoolCreateInfo({}, queueFamilyIndices.graphicsFamily));
-  cPool = device.createCommandPool(
-      vk::CommandPoolCreateInfo({}, queueFamilyIndices.computeFamily));
+      vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, queueFamilyIndices.graphicsFamily));
+  cPool = device.createCommandPool(vk::CommandPoolCreateInfo({},
+      queueFamilyIndices.computeFamily));
   tPool = device.createCommandPool(
       vk::CommandPoolCreateInfo({}, queueFamilyIndices.transferFamily));
 }

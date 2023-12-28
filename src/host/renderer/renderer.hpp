@@ -46,5 +46,6 @@ private:
   void freeCommandBuffers();
   void recreateSwapchain();
   std::vector<vk::CommandBuffer> commandBuffers;
+  uint32_t syncIdx = 0;
 };
 }

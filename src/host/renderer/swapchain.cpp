@@ -1,4 +1,5 @@
 #include "swapchain.hpp"
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +16,7 @@
 
 namespace rn {
 SwapChain::SwapChain(std::shared_ptr<VulkanHandler> vulkanHandler,
-                     const Window &window_)
+                     Window &window_)
     : window(window_) {
   vlkn = vulkanHandler;
   details.capabilities =
@@ -59,7 +60,7 @@ SwapChain::~SwapChain() {
 }
 
 void SwapChain::init() {
-  createSC(nullptr);
+  createSC(std::move(old));
   createImageViews();
   createRenderPass();
   createDepthResources();
@@ -94,6 +95,7 @@ void SwapChain::createSC(std::shared_ptr<SwapChain> old) {
 }
 
 void SwapChain::createImageViews() {
+  scImageViews.clear();
   scImageViews.reserve(imageCount);
   vk::ImageViewCreateInfo createInfo(
       {}, {}, vk::ImageViewType::e2D, surfaceFormat.format, {},
@@ -132,9 +134,13 @@ vk::AttachmentDescription colorAttachment(
 }
 
 void SwapChain::createDepthResources() {
+  depthImages.clear();
   depthImages.reserve(imageCount);
+  depthImageViews.clear();
   depthImageViews.reserve(imageCount);
+  depthImageAlloc.clear();
   depthImageAlloc.reserve(imageCount);
+  depthImageAllocInfo.clear();
   depthImageAllocInfo.reserve(imageCount);
 
   vk::ImageCreateInfo imageInfo(
@@ -162,6 +168,7 @@ void SwapChain::createDepthResources() {
 }
 
 void SwapChain::createFramebuffers() {
+  framebuffers.clear();
   framebuffers.reserve(imageCount);
   extent = window.getExtent();
   vk::FramebufferCreateInfo info {
@@ -175,9 +182,13 @@ void SwapChain::createFramebuffers() {
 }
 
 void SwapChain::createSynObjects() {
+  imageAvailableSemaphores.clear();
   imageAvailableSemaphores.reserve(MAX_FRAMES_IN_FLIGHT);
+  renderFinishedSemaphores.clear();
   renderFinishedSemaphores.reserve(MAX_FRAMES_IN_FLIGHT);
+  inFlightFences.clear();
   inFlightFences.reserve(MAX_FRAMES_IN_FLIGHT);
+  imagesInFlight.clear();
   imagesInFlight.resize(imageCount, VK_NULL_HANDLE);
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
@@ -264,10 +275,8 @@ std::optional<uint32_t> SwapChain::aquireNextImage(vk::Fence fence, vk::Semaphor
   auto res = vlkn->getDevice().acquireNextImageKHR(swapchain, std::numeric_limits<uint64_t>::max(), sema,
                                                    VK_NULL_HANDLE, &currImg);
   if (res == vk::Result::eErrorOutOfDateKHR) {
-    recreate();
     return std::optional<uint32_t>(std::nullopt);
   }
-  
   return currImg;
 }
 
@@ -285,8 +294,9 @@ void SwapChain::recreate() {
 
   } else {
     hasChanged = true;
-    std::shared_ptr<SwapChain> old = std::make_shared<SwapChain>(*this);
+    old = std::make_shared<SwapChain>(*this);
     init();
   }
+  window.resetResizedFlag();
 }
 } // namespace rn

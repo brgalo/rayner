@@ -32,6 +32,7 @@ public:
   bool shouldClose() { return glfwWindowShouldClose(window); };
   bool wasResized() { return windowResized; }
   void poll() { glfwPollEvents(); };
+  void resetResizedFlag() { windowResized = false; };
 
 private:
   std::shared_ptr<vk::Instance> instance;

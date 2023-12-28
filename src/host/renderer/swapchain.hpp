@@ -20,7 +20,7 @@ class SwapChain {
 public:
   static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
   SwapChain(std::shared_ptr<VulkanHandler> vulkanHandler,
-            const Window &window);
+            Window &window);
   ~SwapChain();
 
   const vk::SwapchainKHR &getSwapchain() const {return swapchain;};
@@ -29,7 +29,7 @@ public:
     return {renderPassTriangles, renderPassLines};
   };
 
-  vk::Framebuffer getFramebuffer() { return framebuffers.front(); };
+  vk::Framebuffer getFramebuffer(size_t idx) { return framebuffers.at(idx); };
   std::vector<vk::Semaphore> imageAvailableSemaphores;
   std::vector<vk::Semaphore> renderFinishedSemaphores;
   std::vector<vk::Fence> imagesInFlight;
@@ -40,7 +40,7 @@ public:
 
   vk::Extent2D getExtent() { return extent; };
 private:
-  const Window &window;
+  Window &window;
   void init();
   void createSC(std::shared_ptr<SwapChain> old);
 
@@ -74,5 +74,6 @@ private:
   std::vector<vk::Framebuffer> framebuffers;
 
   uint32_t currImg = 0;
+  std::shared_ptr<SwapChain> old;
 };
 } // namespace rn
