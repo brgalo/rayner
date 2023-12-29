@@ -1,7 +1,5 @@
 add_library(renderer renderer.cpp
                      renderer.hpp
-                     gui.cpp
-                     gui.hpp
                      window.cpp 
                      window.hpp
                      swapchain.cpp
@@ -12,6 +10,12 @@ add_library(pipeline pipeline.cpp
                      descriptors.hpp
                      descriptors.cpp)
 
+add_library(gui      gui.cpp
+                     gui.hpp
+                     ${IMGUI_INCLUDES}
+                     ${IMPLOT_INCLUDES}
+                     )
+
 include_directories(../../libs/Vulkan-Hpp/glfw/include
                     ../vknhandler
                     ../../../libs/VulkanMemoryAllocator/include
@@ -19,4 +23,4 @@ include_directories(../../libs/Vulkan-Hpp/glfw/include
 target_link_libraries(renderer PRIVATE Vulkan::Vulkan
                                        glfw
                                        pipeline
-                                       )
+                                       gui)

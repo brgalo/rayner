@@ -1,11 +1,13 @@
 #pragma once
 #include "descriptors.hpp"
+#include "imgui.h"
 #include <glm/fwd.hpp>
 #define GLM_FORCE_RADIANS
 #include "glm/glm.hpp"
 
 #include "swapchain.hpp"
 #include "pipeline.hpp"
+#include "gui.hpp"
 #include <memory>
 #include <vector>
 
@@ -23,7 +25,7 @@ public:
   Renderer(std::shared_ptr<VulkanHandler> vlkn_) : vlkn(vlkn_), descriptors(vlkn_){
     consts.mat = glm::mat4{1.0f};
     createCommandBuffers();
-
+    swapChain.setGui(gui);
   };
 
   ~Renderer();
@@ -38,6 +40,8 @@ private:
   RenderDescriptors descriptors;
   GraphicsPipeline pipeline =
       GraphicsPipeline(descriptors, vlkn, swapChain.getRenderPasses());
+  std::shared_ptr<Gui> gui = std::make_shared<Gui>(*vlkn, window, swapChain);
+
   Consts consts{};
 
   //vk::DescriptorSetLayout getConstLayout();

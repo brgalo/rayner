@@ -5,7 +5,6 @@
 #include <memory>
 #include <optional>
 #include <vector>
-#include <vulkan/vulkan_handles.hpp>
 
 #include "vk_mem_alloc.h"
 
@@ -16,13 +15,15 @@ struct SwapChainSupportDetails {
   std::vector<vk::PresentModeKHR> presentModes;
 };
 
+class Gui;
+
 class SwapChain {
 public:
   static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
   SwapChain(std::shared_ptr<VulkanHandler> vulkanHandler,
             Window &window);
   ~SwapChain();
-
+  std::shared_ptr<Gui> gui;
   const vk::SwapchainKHR &getSwapchain() const {return swapchain;};
 
   std::array<vk::RenderPass,2> getRenderPasses() {
@@ -37,8 +38,13 @@ public:
   void resetFences();
   std::optional<uint32_t> aquireNextImage(vk::Fence fence, vk::Semaphore sema);
   void recreate();
-
-  vk::Extent2D getExtent() { return extent; };
+  size_t numberOfImages() const {return imageCount;};
+  vk::Extent2D getExtent() const { return extent; };
+  vk::Format getImageFormat() const { return surfaceFormat.format; };
+  const vk::ImageView &getImageViewPtr(size_t idx) const {
+    return scImageViews.at(idx);
+  };
+  void setGui(std::shared_ptr<Gui> gui_) { gui = gui_; };
 private:
   Window &window;
   void init();

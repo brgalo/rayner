@@ -9,10 +9,10 @@
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_structs.hpp>
 
 #include "GLFW/glfw3.h"
 #include "vma.hpp"
+#include "gui.hpp"
 
 namespace rn {
 SwapChain::SwapChain(std::shared_ptr<VulkanHandler> vulkanHandler,
@@ -293,9 +293,13 @@ void SwapChain::recreate() {
   if (swapchain == nullptr) {
 
   } else {
+    {
     hasChanged = true;
     old = std::make_shared<SwapChain>(*this);
     init();
+    }
+
+    gui->recreateFramebuffers(*this);
   }
   window.resetResizedFlag();
 }

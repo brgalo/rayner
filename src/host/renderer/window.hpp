@@ -33,6 +33,7 @@ public:
   bool wasResized() { return windowResized; }
   void poll() { glfwPollEvents(); };
   void resetResizedFlag() { windowResized = false; };
+  GLFWwindow *get() { return window; };
 
 private:
   std::shared_ptr<vk::Instance> instance;

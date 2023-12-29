@@ -59,8 +59,8 @@ public:
 
 
   vk::ShaderModule createShaderModule(std::vector<char> code);
-  void destroyShaderModule(vk::ShaderModule &module); 
-
+  void destroyShaderModule(vk::ShaderModule &module);
+  uint32_t gQueueIndex() const { return queueFamilyIndices.graphicsFamily; };
 
 private:
   std::shared_ptr<VMA> vma = nullptr;

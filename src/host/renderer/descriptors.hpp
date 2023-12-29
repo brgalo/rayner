@@ -26,7 +26,7 @@ struct RtPushConstsData {};
 class DescriptorSet {
 public:
   DescriptorSet(std::shared_ptr<VulkanHandler> &vlkn_) : vlkn(vlkn_){};
-  ~DescriptorSet();
+  virtual ~DescriptorSet();
 
   DescriptorSet(const DescriptorSet &) = delete;
 
