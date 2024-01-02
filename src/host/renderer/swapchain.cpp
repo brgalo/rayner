@@ -120,7 +120,7 @@ vk::AttachmentDescription colorAttachment(
     {}, surfaceFormat.format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear,
     vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare,
     vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined,
-    vk::ImageLayout::ePresentSrcKHR);
+    vk::ImageLayout::eColorAttachmentOptimal);
   attDescr[1] = colorAttachment;
 
   vk::AttachmentReference depthRef{

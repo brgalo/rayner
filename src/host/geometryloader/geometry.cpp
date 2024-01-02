@@ -21,7 +21,7 @@ GeometryHandler::getInputDescription() {
 
 void GeometryHandler::uploadVertexData() {
   vertex = vma->uploadGeometry(reinterpret_cast<const void *>(&coloredCubeData),
-                      sizeof(VertexPC), alloc);
+                      sizeof(VertexPC)*36, alloc);
 }
 
 }

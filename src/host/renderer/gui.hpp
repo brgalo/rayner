@@ -4,7 +4,10 @@
 #include "swapchain.hpp"
 #include "vknhandler.hpp"
 #include "window.hpp"
+#include <cstdint>
 #include <vector>
+#include <vulkan/vulkan_handles.hpp>
+#include <vulkan/vulkan_structs.hpp>
 
 namespace rn {
 class Gui {
@@ -12,6 +15,7 @@ public:
   Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain);
   ~Gui();
   void recreateFramebuffers(const SwapChain &swapchain);
+  void render(vk::CommandBuffer &buffer, uint32_t idx, vk::Extent2D extent);
 private:
   VulkanHandler &vlkn;
   Window &window;

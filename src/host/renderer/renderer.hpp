@@ -2,8 +2,7 @@
 #include "descriptors.hpp"
 #include "imgui.h"
 #include <glm/fwd.hpp>
-#define GLM_FORCE_RADIANS
-#include "glm/glm.hpp"
+#include "camera.hpp"
 
 #include "swapchain.hpp"
 #include "pipeline.hpp"
@@ -43,6 +42,7 @@ private:
   std::shared_ptr<Gui> gui = std::make_shared<Gui>(*vlkn, window, swapChain);
 
   Consts consts{};
+  Camera camera{window};
 
   //vk::DescriptorSetLayout getConstLayout();
 

@@ -22,6 +22,10 @@ struct glfwContext {
   ~glfwContext() { glfwTerminate(); }
 };
 
+float Window::getAspectRatio() const {
+  return static_cast<float>(extent.width) / static_cast<float>(extent.height);
+}
+
 void Window::frameBufferResizedCallback(GLFWwindow *pWindow, int width,
                                         int height) {
   auto window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(pWindow));

@@ -1,5 +1,7 @@
 #include "vma.hpp"
+#include <cstring>
 #include <stdexcept>
+#include <string>
 #include <vector>
 #include <vulkan/vulkan_enums.hpp>
 #include <vulkan/vulkan_handles.hpp>
@@ -77,6 +79,11 @@ vk::Buffer VMA::uploadGeometry(const void *pData, vk::DeviceSize size, VmaAlloca
   return uploadWithStaging(pData, size, alloc, vk::BufferUsageFlagBits::eVertexBuffer);
 }
 
+void VMA::updateDescriptor(const void *pData, vk::DeviceSize size,
+                           VmaAllocationInfo &info) {
+  memcpy(info.pMappedData, pData, size);
+}
+
 vk::Buffer VMA::uploadWithStaging(const void *pData, size_t size,
                                   VmaAllocation &alloc, vk::BufferUsageFlags usageFlags) {
   VmaAllocation stagingAlloc;
@@ -85,6 +92,8 @@ vk::Buffer VMA::uploadWithStaging(const void *pData, size_t size,
 
   memcpy(stagingInfo.pMappedData, pData, size);
 
+  std::vector<float> test(size);
+  memcpy(test.data(), stagingInfo.pMappedData, size);
 
   vk::BufferCreateInfo createInfo{
       {}, size, usageFlags | vk::BufferUsageFlagBits::eTransferDst};

@@ -34,6 +34,7 @@ public:
   void poll() { glfwPollEvents(); };
   void resetResizedFlag() { windowResized = false; };
   GLFWwindow *get() { return window; };
+  float getAspectRatio() const;
 
 private:
   std::shared_ptr<vk::Instance> instance;

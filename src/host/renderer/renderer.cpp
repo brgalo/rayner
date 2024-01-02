@@ -6,8 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
-#include <vulkan/vulkan.hpp>
-#include <iostream>
+#include "vma.hpp"
 
 namespace rn {
 Renderer::~Renderer() {
@@ -43,8 +42,14 @@ void Renderer::render(vk::Buffer vert) {
       swapChain.aquireNextImage(swapChain.inFlightFences.at(syncIdx),
                                 swapChain.imageAvailableSemaphores.at(syncIdx));
   if (!idx.has_value()) {
-    std::cout << "couldn't render, try again!" << std::endl;
+    throw std::runtime_error("could get valid image to render!");
   }
+
+  // camera
+  camera.setOrtographic();
+  auto projView = camera.getProjection()*camera.getView();
+  descriptors.update(projView, syncIdx);
+  
   auto &buffer = commandBuffers.at(syncIdx);
   buffer.begin(vk::CommandBufferBeginInfo{});
   std::array<vk::ClearValue, 2> clearVals{
@@ -67,8 +72,9 @@ void Renderer::render(vk::Buffer vert) {
   buffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(swapChain.getExtent().width),
                                      static_cast<float>(swapChain.getExtent().height), 0.0f, 1.0f));
   buffer.setScissor(0, vk::Rect2D(vk::Offset2D{0, 0}, swapChain.getExtent()));
-  buffer.draw(3, 1, 0, 0);
+  buffer.draw(3*12, 1, 0, 0);
   buffer.endRenderPass();
+  gui->render(buffer, idx.value(), swapChain.getExtent());
   buffer.end();
 
   if (vk::Result::eSuccess !=

@@ -3,7 +3,9 @@ add_library(renderer renderer.cpp
                      window.cpp 
                      window.hpp
                      swapchain.cpp
-                     swapchain.hpp)
+                     swapchain.hpp
+                     camera.hpp
+                     camera.cpp)
 
 add_library(pipeline pipeline.cpp
                      pipeline.hpp

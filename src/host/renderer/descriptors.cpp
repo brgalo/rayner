@@ -12,6 +12,7 @@
 #include <glm/fwd.hpp>
 #include <stdexcept>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 namespace rn {
 
 DescriptorSet::~DescriptorSet() {
@@ -26,7 +27,7 @@ void DescriptorSet::freeSets() {
   vlkn->getDevice().freeDescriptorSets(pool, sets);
 }
 
-void RenderDescriptors::updateSets() {
+void DescriptorSet::updateSets() {
   std::array<vk::WriteDescriptorSet, SwapChain::MAX_FRAMES_IN_FLIGHT> writes{};
   std::array<vk::DescriptorBufferInfo, writes.size()> infos{};
   for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
@@ -79,6 +80,13 @@ void RenderDescriptors::createSets() {
     buffers.push_back(vlkn->getVma()->createBuffer(
         allocs[i], allocInfos[i], createInfo, allocCreateInfo));
   }
+}
+
+void RenderDescriptors::update(const glm::mat4 &mat, size_t idx) {
+  // copy to buffer
+  memcpy(allocInfos.at(idx).pMappedData, &mat, sizeof(glm::mat4));
+  vk::MappedMemoryRange range(allocInfos.at(idx).deviceMemory,0,VK_WHOLE_SIZE);
+  vlkn->getDevice().flushMappedMemoryRanges(range);
 }
 
 } // namespace rn

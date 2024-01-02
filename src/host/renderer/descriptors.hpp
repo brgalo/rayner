@@ -3,6 +3,7 @@
 #include "vknhandler.hpp"
 
 // std
+#include <cstddef>
 #include <cstdint>
 #include <glm/fwd.hpp>
 #include <memory>
@@ -31,7 +32,7 @@ public:
   DescriptorSet(const DescriptorSet &) = delete;
 
   std::vector<vk::DescriptorSet> getSets() { return sets; };
-  virtual void updateSets() = 0; 
+  virtual void updateSets(); 
   void addPoolSize(vk::DescriptorType type, uint32_t count) {
     poolSize.push_back({type, count});
   };
@@ -61,6 +62,7 @@ private:
 };
 
 class RenderDescriptors : public DescriptorSet {
+  struct UniformBuffer;
 public:
   RenderDescriptors(std::shared_ptr<VulkanHandler> vlkn) : DescriptorSet(vlkn) {
     addPoolSize(vk::DescriptorType::eUniformBuffer, 2);
@@ -72,6 +74,7 @@ public:
     ub.mat = ub.projectionViewMatrix(vk::Extent2D{1000, 500});
     updateSets();
   };
+  void update(const glm::mat4 &val, size_t idx);
 
 private:
   struct UniformBuffer {
@@ -97,7 +100,6 @@ private:
   } ub;
 
   void createSets() override;
-  void updateSets() override;
 };
 
 } // namespace rn

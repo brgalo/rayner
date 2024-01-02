@@ -1,6 +1,7 @@
 #pragma once
 #include "vknhandler.hpp"
 #include <vector>
+#include <vulkan/vulkan.hpp>
 
 #ifndef VMA_H
 #define VMA_H
@@ -23,7 +24,10 @@ public:
                           VmaAllocationCreateInfo &allocCreateInfo);
   void destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer);
 
-  vk::Buffer uploadGeometry(const void *pData, vk::DeviceSize size, VmaAllocation &alloc);
+  vk::Buffer uploadGeometry(const void *pData, vk::DeviceSize size,
+                            VmaAllocation &alloc);
+  void updateDescriptor(const void *pData, vk::DeviceSize size,
+                        VmaAllocationInfo &info);
 
   VmaAllocator& vma() {return vma_;};
   private:

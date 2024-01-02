@@ -10,6 +10,7 @@
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_enums.hpp>
 #include <vulkan/vulkan_handles.hpp>
+#include <vulkan/vulkan_structs.hpp>
 
 namespace rn {
 Gui::Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain)
@@ -28,6 +29,20 @@ Gui::~Gui() {
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
   vlkn.getDevice().destroyDescriptorPool(pool);
+}
+
+void Gui::render(vk::CommandBuffer &buffer, uint32_t idx, vk::Extent2D extent) {
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+  ImGui::ShowDemoWindow();
+
+  ImGui::Render();
+
+  vk::RenderPassBeginInfo info{
+      renderPass, framebuffers.at(idx), {{0, 0}, extent}};
+  buffer.beginRenderPass(info, vk::SubpassContents::eInline);
+  ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), buffer);
+  buffer.endRenderPass();
 }
 
 void Gui::createContext(const SwapChain &swapchain) {
@@ -88,13 +103,9 @@ void Gui::uploadFonts() {
 
 void Gui::createFramebuffers(const SwapChain & swapchain) {
   framebuffers.resize(swapchain.numberOfImages());
-  vk::FramebufferCreateInfo info{{},
-                                 renderPass,
-                                 1,
-                                 {},
-                                 swapchain.getExtent().width,
-                                 swapchain.getExtent().height,
-                                 1};
+  vk::FramebufferCreateInfo info{
+    {}, renderPass, 1, {}, swapchain.getExtent().width,
+        swapchain.getExtent().height,1};
   for (size_t i = 0; i < swapchain.numberOfImages(); ++i) {
     info.setAttachments(swapchain.getImageViewPtr(i));
     framebuffers.at(i) = vlkn.getDevice().createFramebuffer(info);
