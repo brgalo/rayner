@@ -5,7 +5,9 @@ add_library(renderer renderer.cpp
                      swapchain.cpp
                      swapchain.hpp
                      camera.hpp
-                     camera.cpp)
+                     camera.cpp
+                     keyboard.hpp
+                     keyboard.cpp)
 
 add_library(pipeline pipeline.cpp
                      pipeline.hpp

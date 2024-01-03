@@ -35,9 +35,14 @@ void Renderer::freeCommandBuffers() {
   vlkn->getDevice().freeCommandBuffers(vlkn->getGpool(), commandBuffers);
 }
 
+void Renderer::updateCamera(float frameTime) {
+  if (camera.updateView(frameTime)) {
+    // update descriptor trafo if view changed!
+    descriptors.setUb(camera.getProjView());
+  }
+}
+
 void Renderer::render(vk::Buffer vert) {
-  if (window.wasResized())
-    swapChain.recreate();
   auto idx =
       swapChain.aquireNextImage(swapChain.inFlightFences.at(syncIdx),
                                 swapChain.imageAvailableSemaphores.at(syncIdx));

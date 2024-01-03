@@ -75,6 +75,7 @@ public:
     updateSets();
   };
   void update(const glm::mat4 &val, size_t idx);
+  void setUb(const glm:: mat4 &view);
 
 private:
   struct UniformBuffer {

@@ -32,6 +32,7 @@ public:
   Renderer(const Renderer &) = delete;
   Renderer &operator=(const Renderer &) = delete;
   void render(vk::Buffer vert);
+  void updateCamera(float frameTime);
 private:
   std::shared_ptr<VulkanHandler> vlkn = nullptr;
   Window window = Window{vlkn};
