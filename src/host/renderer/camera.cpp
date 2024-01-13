@@ -9,20 +9,27 @@ Camera::Camera(Window &window_) : window(window_) {
   // setOrtographic();
   setPerspective();
   setViewYXZ(controller.pos, controller.rotation);
+  calcViewProj();
 }
 
 void Camera::setOrtographic() {
-    setOrtographic(-window.getAspectRatio(), window.getAspectRatio(), -1, 1, -10,
-                 10);
+    setOrtographic(-window.getAspectRatio(), window.getAspectRatio(), -1, 1, -100,
+                 100);
 }
 
 void Camera::setOrtographic(float left, float right, float top,
                                  float bottom, float near, float far) {
-    projection = ortho(left, right, bottom, top, near, far);
+  projection = glm::mat4{1.0f};
+  projection[0][0] = 2.f / (right - left);
+  projection[1][1] = 2.f / (bottom - top);
+  projection[2][2] = 1.f / (far - near);
+  projection[3][0] = -(right + left) / (right - left);
+  projection[3][1] = -(bottom + top) / (bottom - top);
+  projection[3][2] = -near / (far - near);
 }
 
 void Camera::setPerspective() {
-    setPerspective(60,window.getAspectRatio(),0,100);
+    setPerspective(radians(60.f),window.getAspectRatio(),0.1,10);
 }
 
 void Camera::setPerspective(float fovy, float aspect, float near,

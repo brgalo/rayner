@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <vulkan/vulkan_enums.hpp>
 #include "vma.hpp"
 
 namespace rn {
@@ -36,10 +37,7 @@ void Renderer::freeCommandBuffers() {
 }
 
 void Renderer::updateCamera(float frameTime) {
-  if (camera.updateView(frameTime)) {
-    // update descriptor trafo if view changed!
-    descriptors.setUb(camera.getProjView());
-  }
+  camera.updateView(frameTime);
 }
 
 void Renderer::render(vk::Buffer vert) {
@@ -51,33 +49,45 @@ void Renderer::render(vk::Buffer vert) {
   }
 
   // camera
-  camera.setOrtographic();
-  auto projView = camera.getProjection()*camera.getView();
-  descriptors.update(projView, syncIdx);
+  descriptors.update(camera.getProjView(), syncIdx);
   
   auto &buffer = commandBuffers.at(syncIdx);
   buffer.begin(vk::CommandBufferBeginInfo{});
   std::array<vk::ClearValue, 2> clearVals{
       {vk::ClearDepthStencilValue{1.0f, 0},
        vk::ClearColorValue{0.01f, 0.01f, 0.01f, 1.0f}}};
-  vk::RenderPassBeginInfo beginInfo{swapChain.getRenderPasses().front(),
+  vk::RenderPassBeginInfo beginInfo{swapChain.getRenderPass(),
                                     swapChain.getFramebuffer(idx.value()),
                                     {vk::Offset2D{0, 0}, swapChain.getExtent()},
                                     clearVals};
   buffer.beginRenderPass(beginInfo, vk::SubpassContents::eInline);
-  buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.get());
-  buffer.pushConstants(pipeline.getLayout(),
+  buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineTri.get());
+  buffer.pushConstants(pipelineTri.getLayout(),
                        vk::ShaderStageFlagBits::eVertex |
                            vk::ShaderStageFlagBits::eFragment,
                        0, sizeof(Consts), &consts);
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                            pipeline.getLayout(), 0,
+                            pipelineTri.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
   buffer.bindVertexBuffers(0, vert, {0});
   buffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(swapChain.getExtent().width),
                                      static_cast<float>(swapChain.getExtent().height), 0.0f, 1.0f));
   buffer.setScissor(0, vk::Rect2D(vk::Offset2D{0, 0}, swapChain.getExtent()));
-  buffer.draw(3*12, 1, 0, 0);
+  buffer.draw(3 * 12, 1, 0, 0);
+
+  // render lines
+  buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineLin.get());
+  buffer.setLineWidth(5.f);
+  buffer.pushConstants(pipelineLin.getLayout(),
+                       vk::ShaderStageFlagBits::eVertex |
+                           vk::ShaderStageFlagBits::eFragment,
+                       0, sizeof(Consts), &consts);
+  buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                            pipelineLin.getLayout(), 0,
+                            descriptors.getSets().at(syncIdx), nullptr);
+  buffer.bindVertexBuffers(0, vert, {0});
+  buffer.draw(3 * 12, 1, 0, 0);
+  
   buffer.endRenderPass();
   gui->render(buffer, idx.value(), swapChain.getExtent());
   buffer.end();

@@ -38,8 +38,11 @@ private:
   Window window = Window{vlkn};
   SwapChain swapChain = SwapChain(vlkn, window);
   RenderDescriptors descriptors;
-  GraphicsPipeline pipeline =
-      GraphicsPipeline(descriptors, vlkn, swapChain.getRenderPasses());
+  GraphicsPipelineTriangles pipelineTri =
+      GraphicsPipelineTriangles(descriptors, swapChain.getRenderPass(), vlkn);
+  GraphicsPipelineLines pipelineLin =
+      GraphicsPipelineLines(descriptors, swapChain.getRenderPass(), vlkn);
+  
   std::shared_ptr<Gui> gui = std::make_shared<Gui>(*vlkn, window, swapChain);
 
   Consts consts{};

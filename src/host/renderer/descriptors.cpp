@@ -89,7 +89,4 @@ void RenderDescriptors::update(const glm::mat4 &mat, size_t idx) {
   vlkn->getDevice().flushMappedMemoryRanges(range);
 }
 
-void RenderDescriptors::setUb(const glm::mat4 &mat) {
-}
-
 } // namespace rn

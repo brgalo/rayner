@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_handles.hpp>
 
 
 
@@ -34,8 +33,7 @@ struct PipelineConfigInfo {
 class Pipeline {
 public:
   Pipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
-           std::shared_ptr<VulkanHandler> vulkn_)
-      : set(set_), bindPoint(bindP), vlkn(vulkn_) {};
+           std::shared_ptr<VulkanHandler> vulkn_);
   ~Pipeline() {
     vlkn->getDevice().destroyPipeline(pipeline_);
     vlkn->getDevice().destroyPipelineLayout(layout_);
@@ -52,9 +50,8 @@ public:
   vk::PipelineLayout getLayout() { return layout_; };
 
 protected:
-  virtual void config();
-  virtual void createLayout(){};
-  virtual void create();
+  virtual void config() = 0;
+  virtual void createLayout() = 0;
   PipelineConfigInfo configInfo = {};
 
   vk::Pipeline pipeline_;
@@ -69,24 +66,38 @@ private:
 
 class GraphicsPipeline : public Pipeline {
 public:
-  GraphicsPipeline(DescriptorSet &set_, std::shared_ptr<VulkanHandler> vlkn,
-                   std::array<vk::RenderPass,2> renderPasses)
-      : Pipeline(set_, vk::PipelineBindPoint::eGraphics, vlkn) {
-    triangleRenderPass = renderPasses[0];
-    lineRenderPass = renderPasses[1];
-    init();
-  };
-  ~GraphicsPipeline() {
+  GraphicsPipeline(DescriptorSet &set_, vk::RenderPass renderPass_,
+                   std::shared_ptr<VulkanHandler> vlkn);
+
+protected:
+  vk::RenderPass renderPass;
+  virtual void config() override;
+  void init(const std::string &vertPath,const std::string &fragPath);
+  virtual void createLayout() override;
+  void create(vk::GraphicsPipelineCreateInfo &info);
+};
+
+class GraphicsPipelineTriangles : public GraphicsPipeline {
+public:
+  GraphicsPipelineTriangles(DescriptorSet &set_, vk::RenderPass renderPass_,
+                            std::shared_ptr<VulkanHandler> vlkn);
+  ~GraphicsPipelineTriangles() {
   }
-  void config() override;
-  void createLayout() override;
-  void init();
+
   RenderPushConstsData consts;
-  vk::RenderPass triangleRenderPass;
-  vk::RenderPass lineRenderPass;
+  vk::RenderPass renderPass;
 
 private:
-  
+  void config() override;
+};
+
+class GraphicsPipelineLines : public GraphicsPipeline{
+public:
+  GraphicsPipelineLines(DescriptorSet &set_, vk::RenderPass renderPass_,
+                        std::shared_ptr<VulkanHandler> vlkn);
+
+private:
+  void config() override;
 };
 
 class ComputePipeline : Pipeline {

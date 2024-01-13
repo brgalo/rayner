@@ -1,5 +1,7 @@
 #include "pipeline.hpp"
+#include "descriptors.hpp"
 #include "geometryloader/geometry.hpp"
+#include "vknhandler.hpp"
 #include <iterator>
 #include <stdexcept>
 #include <string>
@@ -8,7 +10,36 @@
 
 namespace rn {
 
-void Pipeline::config() {
+Pipeline::Pipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
+                   std::shared_ptr<VulkanHandler> vulkn_)
+    : set(set_), bindPoint(bindP), vlkn(vulkn_) {}
+
+GraphicsPipeline::GraphicsPipeline(DescriptorSet &set_, vk::RenderPass renderPass_,
+                   std::shared_ptr<VulkanHandler> vlkn)
+      : Pipeline(set_, vk::PipelineBindPoint::eGraphics, vlkn){
+        renderPass = renderPass_;
+};
+
+GraphicsPipelineTriangles::GraphicsPipelineTriangles(DescriptorSet &set_,
+                            vk::RenderPass renderPass_,
+                            std::shared_ptr<VulkanHandler> vlkn)
+      : GraphicsPipeline(set_, renderPass_, vlkn) {
+        GraphicsPipelineTriangles::config();
+        init("spv/tri.vert.spv", "spv/tri.frag.spv");
+};
+
+GraphicsPipelineLines::GraphicsPipelineLines(
+    DescriptorSet &set_, vk::RenderPass renderPass_,
+    std::shared_ptr<VulkanHandler> vlkn)
+    : GraphicsPipeline(set_, renderPass_, vlkn) {
+        GraphicsPipelineLines::config();
+        init("spv/lin.vert.spv","spv/lin.frag.spv");
+};
+
+
+
+
+void GraphicsPipeline::config() {
 
   // will be set dynamically!
   configInfo.viewportInfo.viewportCount = 1;
@@ -63,23 +94,51 @@ void Pipeline::config() {
   configInfo.depthStencilInfo.front = vk::StencilOpState();
   configInfo.depthStencilInfo.back = vk::StencilOpState();
 
+  configInfo.dynamicStateEnables.reserve(10);
   configInfo.dynamicStateEnables = {vk::DynamicState::eViewport,
                                     vk::DynamicState::eScissor};
   configInfo.dynamicStateInfo =
       vk::PipelineDynamicStateCreateInfo{{}, configInfo.dynamicStateEnables};
 }
 
-void GraphicsPipeline::init() {
-  config();
+void GraphicsPipelineTriangles::config() {
+  GraphicsPipeline::config();
+  configInfo.inputAssemblyInfo.setPrimitiveRestartEnable(VK_FALSE);
+  configInfo.inputAssemblyInfo.setTopology(
+      vk::PrimitiveTopology::eTriangleList);
+}
+
+
+void GraphicsPipelineLines::config() {
+  GraphicsPipeline::config();
+  // change primitive type!
+  configInfo.inputAssemblyInfo.setTopology(vk::PrimitiveTopology::eLineList);
+
+  configInfo.dynamicStateEnables.push_back(vk::DynamicState::eLineWidth);
+   configInfo.dynamicStateInfo =
+      vk::PipelineDynamicStateCreateInfo{{}, configInfo.dynamicStateEnables};
+
+}
+
+void GraphicsPipeline::create(vk::GraphicsPipelineCreateInfo &info) {
+  auto res = vlkn->getDevice().createGraphicsPipeline(nullptr, info);
+  if (res.result != vk::Result::eSuccess) {
+    throw std::runtime_error("failed to create Pipeline!");
+  }
+  pipeline_ = res.value;
+}
+
+void GraphicsPipeline::init(const std::string &vertPath,
+                            const std::string &fragPath) {
   createLayout();
 
   // shader modules
-  vk::ShaderModule triVertex = createModule("spv/tri.vert.spv");
-  vk::ShaderModule triFragme = createModule("spv/tri.frag.spv");
+  vk::ShaderModule vert = createModule(vertPath);
+  vk::ShaderModule frag = createModule(fragPath);
 
   std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages{
-      {{{}, vk::ShaderStageFlagBits::eVertex, triVertex, "main"},
-       {{}, vk::ShaderStageFlagBits::eFragment, triFragme, "main"}}};
+      {{{}, vk::ShaderStageFlagBits::eVertex, vert, "main"},
+       {{}, vk::ShaderStageFlagBits::eFragment, frag, "main"}}};
   auto inputDesc = GeometryHandler::getInputDescription();
   auto inputAttr = GeometryHandler::getAttributeDescription();
   vk::PipelineVertexInputStateCreateInfo vertexInfo{{}, inputDesc, inputAttr};
@@ -96,15 +155,11 @@ void GraphicsPipeline::init() {
                                             &configInfo.colorBlendInfo,
                                             &configInfo.dynamicStateInfo,
                                             layout_,
-                                            triangleRenderPass,
+                                            renderPass,
                                             configInfo.subpass};
-  auto res = vlkn->getDevice().createGraphicsPipeline(nullptr, createInfo);
-  if (res.result != vk::Result::eSuccess) {
-    throw std::runtime_error("failed to create Pipeline!");
-  }
-  pipeline_ = res.value;
-  destroyModule(triVertex);
-  destroyModule(triFragme);
+  create(createInfo);
+  destroyModule(vert);
+  destroyModule(frag);
 }
 
 vk::ShaderModule Pipeline::createModule(const std::string &filepath) {
@@ -129,14 +184,6 @@ std::vector<char> Pipeline::readFile(const std::string &filepath) {
   return buffer;  
 };
 
-void GraphicsPipeline::config() {
-  Pipeline::config();
-
-  configInfo.inputAssemblyInfo.setPrimitiveRestartEnable(VK_FALSE);
-  configInfo.inputAssemblyInfo.setTopology(
-      vk::PrimitiveTopology::eTriangleList);
-}
-
 void GraphicsPipeline::createLayout() {
   vk::PushConstantRange constRange{vk::ShaderStageFlagBits::eVertex |
                             vk::ShaderStageFlagBits::eFragment,
@@ -147,10 +194,5 @@ void GraphicsPipeline::createLayout() {
   layout_ = vlkn->getDevice().createPipelineLayout(createInfo);
 }
 
-void Pipeline::create() {
-
-
-  //vk::GraphicsPipelineCreateInfo createInfo{{},shaderStages,{{},configInfo.},configInfo.inputAssemblyInfo,}
-}
 
 }

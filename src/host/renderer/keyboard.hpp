@@ -20,8 +20,8 @@ public:
   bool moveInPlaneXZ(GLFWwindow *window, float dt);
 
   KeyMappings keys{};
-  glm::vec3 rotation{0,-0.5,0};
-  glm::vec3 pos{0,1,2};
+  glm::vec3 rotation{0,glm::radians(90.f),0};
+  glm::vec3 pos{-2,0,0};
   float moveSpeed{3.f};
   float lookSpeed{1.f};
 };

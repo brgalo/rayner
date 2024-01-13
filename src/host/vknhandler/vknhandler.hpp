@@ -98,7 +98,6 @@ private:
   //  void hasGflwRequiredInstanceExtenstions() {
   //    auto extensions = vk::enumerateInstanceExtensionProperties();
   //  }
-
   const std::vector<const char *> deviceExtensionNames = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,

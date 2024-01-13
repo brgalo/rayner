@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <vulkan/vulkan_handles.hpp>
 
 #include "vk_mem_alloc.h"
 
@@ -26,9 +27,7 @@ public:
   std::shared_ptr<Gui> gui;
   const vk::SwapchainKHR &getSwapchain() const {return swapchain;};
 
-  std::array<vk::RenderPass,2> getRenderPasses() {
-    return {renderPassTriangles, renderPassLines};
-  };
+  vk::RenderPass getRenderPass() { return renderPass; };
 
   vk::Framebuffer getFramebuffer(size_t idx) { return framebuffers.at(idx); };
   std::vector<vk::Semaphore> imageAvailableSemaphores;
@@ -69,8 +68,7 @@ private:
   uint32_t imageCount;
 
   vk::SwapchainKHR swapchain;
-  vk::RenderPass renderPassLines;
-  vk::RenderPass renderPassTriangles;
+  vk::RenderPass renderPass;
   std::vector<vk::Image> scImages;
   std::vector<vk::ImageView> scImageViews;
   std::vector<vk::Image> depthImages;

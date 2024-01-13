@@ -253,8 +253,11 @@ void VulkanHandler::createLogicalDevice() {
                                          1, &queuePrio);
   const std::array<const vk::DeviceQueueCreateInfo, 3> queueInfos{
       graphicsInfo, computeInfo, transferInfo};
-  {}
-  vk::DeviceCreateInfo createInfo({}, queueInfos, {}, deviceExtensionNames);
+
+  vk::PhysicalDeviceFeatures features;
+  features.wideLines = VK_TRUE;
+  vk::DeviceCreateInfo createInfo({}, queueInfos, {}, deviceExtensionNames,
+                                  &features);
   device = physicalDevice.createDevice(createInfo);
 
   // load functions dynamically

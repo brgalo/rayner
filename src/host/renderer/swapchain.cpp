@@ -44,7 +44,7 @@ SwapChain::~SwapChain() {
   }
 
   // subpass
-  vlkn->getDevice().destroyRenderPass(renderPassTriangles);
+  vlkn->getDevice().destroyRenderPass(renderPass);
 
   // destroy depth resources
   for (size_t i = 0; i < imageCount; ++i) {
@@ -129,7 +129,7 @@ vk::AttachmentDescription colorAttachment(
 
   vk::SubpassDescription subpassDescr{
       {}, vk::PipelineBindPoint::eGraphics, {}, colorRef, {}, &depthRef};
-  renderPassTriangles = vlkn->getDevice().createRenderPass(
+  renderPass = vlkn->getDevice().createRenderPass(
       vk::RenderPassCreateInfo({}, attDescr, subpassDescr));
 }
 
@@ -172,7 +172,7 @@ void SwapChain::createFramebuffers() {
   framebuffers.reserve(imageCount);
   extent = window.getExtent();
   vk::FramebufferCreateInfo info {
-      {}, renderPassTriangles, {}, extent.width, extent.height, 1};
+      {}, renderPass, {}, extent.width, extent.height, 1};
   for (size_t i = 0; i < imageCount; ++i) {
     std::vector<vk::ImageView> attachments = {depthImageViews[i],
                                               scImageViews[i]};

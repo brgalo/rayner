@@ -12,8 +12,6 @@ class Camera {
 public:
   Camera(Window& window);
 
-  const mat4 &getProjection() const { return projection; };
-  const mat4 &getView() const { return view; };
   void setViewDirection(glm::vec3 position, glm::vec3 direction,
                         glm::vec3 up = glm::vec3{0.f, -1.f, 0.f});
   void setViewTarget(glm::vec3 position, glm::vec3 target,
