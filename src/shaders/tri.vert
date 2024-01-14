@@ -1,7 +1,6 @@
 #version 450
 
-layout (location = 0) in vec4 position;
-layout (location = 1) in vec4 color;
+layout (location = 0) in vec3 position;
 
 layout (location = 0) out vec3 fragColor;
 
@@ -23,8 +22,8 @@ vec2 positions[3] = vec2[](
 );
 
 void main() {
-    gl_Position = ubo.projectionViewMatrix*position;
+    gl_Position = ubo.projectionViewMatrix*vec4(position,1);
 
     float lightIntensity = 0.8 ;
-    fragColor = vec3(lightIntensity * color.xyz);
+    fragColor = vec3(0.1,0.7,0.2);
 }

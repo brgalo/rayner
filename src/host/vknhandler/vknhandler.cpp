@@ -254,11 +254,16 @@ void VulkanHandler::createLogicalDevice() {
   const std::array<const vk::DeviceQueueCreateInfo, 3> queueInfos{
       graphicsInfo, computeInfo, transferInfo};
 
+  // p next chain
+  vk::PhysicalDeviceVulkan12Features address;
+  address.setBufferDeviceAddress(VK_TRUE);
+
   vk::PhysicalDeviceFeatures features;
   features.wideLines = VK_TRUE;
   features.largePoints = VK_TRUE;
+
   vk::DeviceCreateInfo createInfo({}, queueInfos, {}, deviceExtensionNames,
-                                  &features);
+                                  &features, &address);
   device = physicalDevice.createDevice(createInfo);
 
   // load functions dynamically

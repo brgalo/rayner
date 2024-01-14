@@ -16,8 +16,8 @@ void Rayner::run() {
     currentTime = newTime;
 
     renderer.updateCamera(frameTime);
-    
-    renderer.render(geom.getVert());
+
+    renderer.render(geom.getVert(), geom.getIdx(), geom.indices.size());
   }
 }
 

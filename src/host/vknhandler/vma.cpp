@@ -1,11 +1,10 @@
 #include "vma.hpp"
+#include <cstddef>
 #include <cstring>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan_enums.hpp>
-#include <vulkan/vulkan_handles.hpp>
-#include <vulkan/vulkan_structs.hpp>
 #define VMA_IMPLEMENTATION
 
 #include "vk_mem_alloc.h"
@@ -13,7 +12,8 @@
 namespace rn {
 
 VMA::VMA(VulkanHandler *vkn_, VmaVulkanFunctions fun) : dev(vkn_->getDevice()) , transferQ(vkn_->getTqueue()), transferPool(vkn_->getTpool()) {
-  VmaAllocatorCreateInfo info{
+  VmaAllocatorCreateInfo info {
+    .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
     .physicalDevice = vkn_->getPhysDevice(), .device = dev,
     .pVulkanFunctions = &fun, .instance = *vkn_->getInstance(),
     .vulkanApiVersion = VK_API_VERSION_1_2};
@@ -71,12 +71,24 @@ void VMA::destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer) {
 }
 
 vk::Buffer VMA::uploadGeometry(const void *pData, vk::DeviceSize size, VmaAllocation &alloc) {
-  vk::BufferCreateInfo bufferCreateInfo{
-      {}, size, vk::BufferUsageFlagBits::eIndexBuffer};
-  
-  VmaAllocationCreateInfo createInfo{
-      {}, VMA_MEMORY_USAGE_AUTO, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
   return uploadWithStaging(pData, size, alloc, vk::BufferUsageFlagBits::eVertexBuffer);
+}
+
+vk::Buffer VMA::uploadVertices(const std::vector<glm::vec3> &verts,
+                               VmaAllocation &alloc) {
+  return uploadWithStaging(
+      verts.data(), sizeof(verts[0])*verts.size(), alloc,
+      vk::BufferUsageFlagBits::eVertexBuffer |
+          vk::BufferUsageFlagBits::eShaderDeviceAddress |
+          vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR);
+}
+
+vk::Buffer VMA::uploadIndices(const std::vector<uint32_t> &idx, VmaAllocation &alloc) {
+  return uploadWithStaging(
+      idx.data(), sizeof(idx[0])*idx.size(), alloc,
+      vk::BufferUsageFlagBits::eIndexBuffer |
+          vk::BufferUsageFlagBits::eShaderDeviceAddress |
+          vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR);
 }
 
 void VMA::updateDescriptor(const void *pData, vk::DeviceSize size,

@@ -40,7 +40,7 @@ void Renderer::updateCamera(float frameTime) {
   camera.updateView(frameTime);
 }
 
-void Renderer::render(vk::Buffer vert) {
+void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx) {
   auto idx =
       swapChain.aquireNextImage(swapChain.inFlightFences.at(syncIdx),
                                 swapChain.imageAvailableSemaphores.at(syncIdx));
@@ -69,11 +69,12 @@ void Renderer::render(vk::Buffer vert) {
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                             pipelineTri.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
-  buffer.bindVertexBuffers(0, vert, {0});
+  buffer.bindVertexBuffers(0, vertexBuffer, {0});
+  buffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
   buffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(swapChain.getExtent().width),
                                      static_cast<float>(swapChain.getExtent().height), 0.0f, 1.0f));
   buffer.setScissor(0, vk::Rect2D(vk::Offset2D{0, 0}, swapChain.getExtent()));
-  buffer.draw(3 * 12, 1, 0, 0);
+  buffer.drawIndexed(nIdx, 1, 0, 0, 0);
 
   // render lines
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineLin.get());
@@ -85,8 +86,8 @@ void Renderer::render(vk::Buffer vert) {
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                             pipelineLin.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
-  buffer.bindVertexBuffers(0, vert, {0});
-  buffer.draw(3 * 12, 1, 0, 0);
+  buffer.bindVertexBuffers(0, vertexBuffer, {0});
+  buffer.draw(4, 1, 0, 0);
 
   // render points
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinePts.get());
@@ -97,8 +98,8 @@ void Renderer::render(vk::Buffer vert) {
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                             pipelinePts.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
-  buffer.bindVertexBuffers(0, vert, {0});
-  buffer.draw(3 * 12, 1, 0, 0);
+  buffer.bindVertexBuffers(0, vertexBuffer, {0});
+  buffer.draw(4, 1, 0, 0);
   
   buffer.endRenderPass();
   gui->render(buffer, idx.value(), swapChain.getExtent());

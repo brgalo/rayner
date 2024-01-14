@@ -1,7 +1,10 @@
 #pragma once
 #include "vknhandler.hpp"
+#include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.hpp>
+
+#include "glm/glm.hpp"
 
 #ifndef VMA_H
 #define VMA_H
@@ -26,6 +29,10 @@ public:
 
   vk::Buffer uploadGeometry(const void *pData, vk::DeviceSize size,
                             VmaAllocation &alloc);
+  vk::Buffer uploadVertices(const std::vector<glm::vec3> &verts,
+                            VmaAllocation &alloc);
+  vk::Buffer uploadIndices(const std::vector<uint32_t> &idx,
+                           VmaAllocation &alloc);
   void updateDescriptor(const void *pData, vk::DeviceSize size,
                         VmaAllocationInfo &info);
 

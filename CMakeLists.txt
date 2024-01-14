@@ -43,6 +43,9 @@ set(IMPLOT_INCLUDES ${IMPLOT_DIR}/implot.h
 #vulkan memory allocator
 add_subdirectory(libs/VulkanMemoryAllocator)
 
+# tiny obj loader
+include_directories(libs/tinyobjloader)
+
 
 include_directories(src/host/renderer/
                     src/host/vknhandler/

@@ -1,6 +1,7 @@
 #pragma once
 #include "descriptors.hpp"
 #include "imgui.h"
+#include <cstddef>
 #include <glm/fwd.hpp>
 #include "camera.hpp"
 
@@ -31,7 +32,7 @@ public:
   bool run();
   Renderer(const Renderer &) = delete;
   Renderer &operator=(const Renderer &) = delete;
-  void render(vk::Buffer vert);
+  void render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx);
   void updateCamera(float frameTime);
 private:
   std::shared_ptr<VulkanHandler> vlkn = nullptr;
