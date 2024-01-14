@@ -32,7 +32,7 @@ struct VertexPC
 };
 
 
-static constexpr VertexPC coloredCubeData[] = {
+static constexpr std::array<VertexPC,36> coloredCubeData = {
     // red face
     {{-1.0f, -1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
     {{-1.0f,  1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},

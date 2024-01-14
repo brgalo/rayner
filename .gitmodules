@@ -10,3 +10,6 @@
 [submodule "libs/implot"]
 	path = libs/implot
 	url = https://github.com/epezent/implot
+[submodule "libs/tinyobjloader"]
+	path = libs/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader
