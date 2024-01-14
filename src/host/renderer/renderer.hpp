@@ -42,6 +42,8 @@ private:
       GraphicsPipelineTriangles(descriptors, swapChain.getRenderPass(), vlkn);
   GraphicsPipelineLines pipelineLin =
       GraphicsPipelineLines(descriptors, swapChain.getRenderPass(), vlkn);
+  GraphicsPipelinePoints pipelinePts =
+      GraphicsPipelinePoints(descriptors, swapChain.getRenderPass(), vlkn);
   
   std::shared_ptr<Gui> gui = std::make_shared<Gui>(*vlkn, window, swapChain);
 

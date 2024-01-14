@@ -100,6 +100,15 @@ private:
   void config() override;
 };
 
+class GraphicsPipelinePoints : public GraphicsPipeline{
+public:
+  GraphicsPipelinePoints(DescriptorSet &set_, vk::RenderPass renderPass_,
+                        std::shared_ptr<VulkanHandler> vlkn);
+
+private:
+  void config() override;
+};
+
 class ComputePipeline : Pipeline {
 
 };

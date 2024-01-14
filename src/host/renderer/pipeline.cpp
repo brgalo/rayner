@@ -3,10 +3,13 @@
 #include "geometryloader/geometry.hpp"
 #include "vknhandler.hpp"
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <fstream>
+#include <vulkan/vulkan_enums.hpp>
+#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 
@@ -17,7 +20,8 @@ Pipeline::Pipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
 GraphicsPipeline::GraphicsPipeline(DescriptorSet &set_, vk::RenderPass renderPass_,
                    std::shared_ptr<VulkanHandler> vlkn)
       : Pipeline(set_, vk::PipelineBindPoint::eGraphics, vlkn){
-        renderPass = renderPass_;
+  renderPass = renderPass_;
+  GraphicsPipeline::config();
 };
 
 GraphicsPipelineTriangles::GraphicsPipelineTriangles(DescriptorSet &set_,
@@ -36,11 +40,19 @@ GraphicsPipelineLines::GraphicsPipelineLines(
         init("spv/lin.vert.spv","spv/lin.frag.spv");
 };
 
+GraphicsPipelinePoints::GraphicsPipelinePoints(
+    DescriptorSet &set_, vk::RenderPass renderPass_,
+    std::shared_ptr<VulkanHandler> vlkn)
+    : GraphicsPipeline(set_, renderPass_, vlkn) {
+        GraphicsPipelinePoints::config();
+        init("spv/pts.vert.spv", "spv/pts.frag.spv");
+};
+
+
 
 
 
 void GraphicsPipeline::config() {
-
   // will be set dynamically!
   configInfo.viewportInfo.viewportCount = 1;
   configInfo.viewportInfo.pViewports = nullptr;
@@ -102,7 +114,6 @@ void GraphicsPipeline::config() {
 }
 
 void GraphicsPipelineTriangles::config() {
-  GraphicsPipeline::config();
   configInfo.inputAssemblyInfo.setPrimitiveRestartEnable(VK_FALSE);
   configInfo.inputAssemblyInfo.setTopology(
       vk::PrimitiveTopology::eTriangleList);
@@ -110,14 +121,17 @@ void GraphicsPipelineTriangles::config() {
 
 
 void GraphicsPipelineLines::config() {
-  GraphicsPipeline::config();
   // change primitive type!
   configInfo.inputAssemblyInfo.setTopology(vk::PrimitiveTopology::eLineList);
 
   configInfo.dynamicStateEnables.push_back(vk::DynamicState::eLineWidth);
    configInfo.dynamicStateInfo =
       vk::PipelineDynamicStateCreateInfo{{}, configInfo.dynamicStateEnables};
+}
 
+void GraphicsPipelinePoints::config() {
+   // change primitive type!
+   configInfo.inputAssemblyInfo.setTopology(vk::PrimitiveTopology::ePointList);
 }
 
 void GraphicsPipeline::create(vk::GraphicsPipelineCreateInfo &info) {

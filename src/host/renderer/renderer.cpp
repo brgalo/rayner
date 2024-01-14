@@ -87,6 +87,18 @@ void Renderer::render(vk::Buffer vert) {
                             descriptors.getSets().at(syncIdx), nullptr);
   buffer.bindVertexBuffers(0, vert, {0});
   buffer.draw(3 * 12, 1, 0, 0);
+
+  // render points
+  buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinePts.get());
+  buffer.pushConstants(pipelinePts.getLayout(),
+                       vk::ShaderStageFlagBits::eVertex |
+                           vk::ShaderStageFlagBits::eFragment,
+                       0, sizeof(Consts), &consts);
+  buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                            pipelinePts.getLayout(), 0,
+                            descriptors.getSets().at(syncIdx), nullptr);
+  buffer.bindVertexBuffers(0, vert, {0});
+  buffer.draw(3 * 12, 1, 0, 0);
   
   buffer.endRenderPass();
   gui->render(buffer, idx.value(), swapChain.getExtent());
@@ -119,4 +131,3 @@ void Renderer::render(vk::Buffer vert) {
   syncIdx = ++syncIdx % SwapChain::MAX_FRAMES_IN_FLIGHT;
 } 
 }
- 
