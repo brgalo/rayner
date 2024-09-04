@@ -2,6 +2,10 @@
 #include "vknhandler.hpp"
 #include <cstdint>
 #include <vector>
+
+
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#include <vulkan/vulkan.h>
 #include <vulkan/vulkan.hpp>
 
 #include "glm/glm.hpp"
@@ -26,6 +30,7 @@ public:
                           VkBufferCreateInfo &createInfo,
                           VmaAllocationCreateInfo &allocCreateInfo);
   void destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer);
+  //vk::Buffer a;
 
   vk::Buffer uploadGeometry(const void *pData, vk::DeviceSize size,
                             VmaAllocation &alloc);
@@ -35,6 +40,8 @@ public:
                            VmaAllocation &alloc);
   void updateDescriptor(const void *pData, vk::DeviceSize size,
                         VmaAllocationInfo &info);
+  
+  vk::DeviceAddress getDeviceAddress(vk::Buffer buffer);
 
   VmaAllocator& vma() {return vma_;};
   private:

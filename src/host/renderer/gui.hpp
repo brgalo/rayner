@@ -6,8 +6,6 @@
 #include "window.hpp"
 #include <cstdint>
 #include <vector>
-#include <vulkan/vulkan_handles.hpp>
-#include <vulkan/vulkan_structs.hpp>
 
 namespace rn {
 class Gui {

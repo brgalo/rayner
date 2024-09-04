@@ -1,6 +1,7 @@
-#include <cstdint>
-#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+
 #include "vknhandler.hpp"
+
+#include <cstdint>
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -8,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan_structs.hpp>
 
 #include "GLFW/glfw3.h"
 #include "vma.hpp"
@@ -255,8 +257,17 @@ void VulkanHandler::createLogicalDevice() {
       graphicsInfo, computeInfo, transferInfo};
 
   // p next chain
+  vk::PhysicalDeviceRayTracingPipelineFeaturesKHR raytracing;
+  raytracing.setRayTracingPipeline(VK_TRUE);
+
+  vk::PhysicalDeviceAccelerationStructureFeaturesKHR acceleration;
+  acceleration.accelerationStructure = VK_TRUE;
+  acceleration.pNext = &raytracing;
+
   vk::PhysicalDeviceVulkan12Features address;
   address.setBufferDeviceAddress(VK_TRUE);
+  address.pNext = &acceleration;
+
 
   vk::PhysicalDeviceFeatures features;
   features.wideLines = VK_TRUE;
@@ -292,6 +303,28 @@ vk::ShaderModule VulkanHandler::createShaderModule(std::vector<char> code) {
 
 void VulkanHandler::destroyShaderModule(vk::ShaderModule &module) {
   device.destroyShaderModule(module);
+}
+
+vk::CommandBuffer VulkanHandler::beginSingleTimeCommands() {
+  vk::CommandBufferAllocateInfo allocInfo{gPool,
+                                          vk::CommandBufferLevel::ePrimary, 1};
+  vk::CommandBuffer buffer = device.allocateCommandBuffers(allocInfo).front();
+  vk::CommandBufferBeginInfo beginInfo{
+      vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+  buffer.begin(beginInfo);
+  return buffer;
+}
+
+void VulkanHandler::endSingleTimeCommands(vk::CommandBuffer buffer) {
+  buffer.end();
+  vk::SubmitInfo info{};
+  info.setCommandBufferCount(1);
+  info.pCommandBuffers = &buffer;
+
+  gQueue.submit(info);
+  gQueue.waitIdle();
+
+  device.freeCommandBuffers(gPool, buffer);
 }
 
 } // namespace rn

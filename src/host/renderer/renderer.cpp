@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
-#include <vulkan/vulkan_enums.hpp>
 #include "vma.hpp"
 
 namespace rn {

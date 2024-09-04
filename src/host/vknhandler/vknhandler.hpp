@@ -1,14 +1,17 @@
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 #ifndef VK_USE_PLATFORM_XCB_KHR
 #define VK_USE_PLATFORM_XCB_KHR
 #endif
+
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#include <vulkan/vulkan.h>
 #include <vulkan/vulkan.hpp>
+
+
 
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
@@ -62,6 +65,10 @@ public:
   vk::ShaderModule createShaderModule(std::vector<char> code);
   void destroyShaderModule(vk::ShaderModule &module);
   uint32_t gQueueIndex() const { return queueFamilyIndices.graphicsFamily; };
+
+  vk::CommandBuffer beginSingleTimeCommands();
+  void endSingleTimeCommands(vk::CommandBuffer buffer);
+
 
 private:
   std::shared_ptr<VMA> vma = nullptr;

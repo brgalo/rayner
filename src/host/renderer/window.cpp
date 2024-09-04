@@ -1,5 +1,4 @@
 #include "window.hpp"
-#include "GLFW/glfw3.h"
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>

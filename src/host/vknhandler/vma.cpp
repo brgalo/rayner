@@ -2,9 +2,7 @@
 #include <cstddef>
 #include <cstring>
 #include <stdexcept>
-#include <string>
 #include <vector>
-#include <vulkan/vulkan_enums.hpp>
 #define VMA_IMPLEMENTATION
 
 #include "vk_mem_alloc.h"
@@ -94,6 +92,10 @@ vk::Buffer VMA::uploadIndices(const std::vector<uint32_t> &idx, VmaAllocation &a
 void VMA::updateDescriptor(const void *pData, vk::DeviceSize size,
                            VmaAllocationInfo &info) {
   memcpy(info.pMappedData, pData, size);
+}
+
+vk::DeviceAddress VMA::getDeviceAddress(vk::Buffer buffer) {
+  return dev.getBufferAddress(buffer);
 }
 
 vk::Buffer VMA::uploadWithStaging(const void *pData, size_t size,

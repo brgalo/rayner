@@ -1,25 +1,25 @@
 #pragma once
 
-#include <glm/fwd.hpp>
-#include <glm/glm.hpp>
+
 #include <memory>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_handles.hpp>
 
+#include "glm/glm.hpp"
+
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 #include "vk_mem_alloc.h"
-#include "vma.hpp"
 
 namespace rn {
+class VMA;
+
 class GeometryHandler {
 public:
   GeometryHandler(std::shared_ptr<VMA> vma_);
-  ~GeometryHandler() {
-    vma->destroyBuffer(vertexAlloc, vertex);
-    vma->destroyBuffer(indexAlloc, index);
-  }
+  ~GeometryHandler();
   vk::CommandBuffer bindVertexBuffer(vk::CommandBuffer commandBuffer);
   void uploadVertexData();
   static std::vector<vk::VertexInputBindingDescription> getInputDescription();

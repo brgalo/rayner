@@ -5,9 +5,9 @@
 #ifndef VK_USE_PLATFORM_XCB_KHR
 #define VK_USE_PLATFORM_XCB_KHR
 #endif
-#include <vulkan/vulkan.hpp>
-#include <GLFW/glfw3.h>
+
 #include "vknhandler.hpp"
+#include <GLFW/glfw3.h>
 
 namespace rn {
 class Window {

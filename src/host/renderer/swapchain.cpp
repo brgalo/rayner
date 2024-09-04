@@ -8,7 +8,6 @@
 #include <optional>
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan.hpp>
 
 #include "GLFW/glfw3.h"
 #include "vma.hpp"

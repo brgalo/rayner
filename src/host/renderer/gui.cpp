@@ -6,11 +6,6 @@
 #include "swapchain.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_enums.hpp>
-#include <vulkan/vulkan_handles.hpp>
-#include <vulkan/vulkan_structs.hpp>
 
 namespace rn {
 Gui::Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain)
@@ -54,22 +49,21 @@ void Gui::createContext(const SwapChain &swapchain) {
   ImPlot::CreateContext();
   ImPlot::StyleColorsDark();
 
+  createRenderPass(swapchain.getImageFormat());
+  
   ImGui_ImplGlfw_InitForVulkan(window.get(), true);
-  ImGui_ImplVulkan_InitInfo info{*vlkn.getInstance(),
-                                 vlkn.getPhysDevice(),
-                                 vlkn.getDevice(),
-                                 vlkn.gQueueIndex(),
-                                 vlkn.getGqueue(),
-                                 VK_NULL_HANDLE,
+  ImGui_ImplVulkan_InitInfo info{
+    *vlkn.getInstance(), vlkn.getPhysDevice(), vlkn.getDevice(),
+        vlkn.gQueueIndex(), vlkn.getGqueue(),
                                  pool,
-                                 0,
+                                 renderPass,
                                  2,
                                  imgCount,
                                  VK_SAMPLE_COUNT_1_BIT};
 
-  createRenderPass(swapchain.getImageFormat());
 
-  ImGui_ImplVulkan_Init(&info, renderPass);
+
+  ImGui_ImplVulkan_Init(&info);
 }
 
 void Gui::createDescriptorPool() {

@@ -3,6 +3,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include "vma.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
@@ -35,7 +36,12 @@ namespace rn {
 GeometryHandler::GeometryHandler(std::shared_ptr<VMA> vma_) : vma(vma_) {
   loadObj("geom/plane.obj");
   vertex = vma->uploadVertices(vertices, vertexAlloc);
-  index = vma->uploadIndices(indices, indexAlloc);  
+  index = vma->uploadIndices(indices, indexAlloc);
+}
+
+GeometryHandler::~GeometryHandler() {
+    vma->destroyBuffer(vertexAlloc, vertex);
+    vma->destroyBuffer(indexAlloc, index);
 }
 
 std::vector<vk::VertexInputAttributeDescription> GeometryHandler::getAttributeDescription() {
