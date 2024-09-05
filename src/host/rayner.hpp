@@ -1,10 +1,16 @@
 #pragma once
 
+
+#define VMA_DEBUG_INITIALIZE_ALLOCATIONS 1
+#define VMA_DEBUG_MARGIN 16
+
 #include "geometryloader/geometry.hpp"
 #include "raytracer/raytracer.hpp"
 #include "renderer.hpp"
 #include "vknhandler.hpp"
 #include <memory>
+
+
 namespace rn {
 class Rayner {
 public:

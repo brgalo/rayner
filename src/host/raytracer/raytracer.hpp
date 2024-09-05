@@ -23,6 +23,7 @@ private:
   vk::Buffer tlasBuffer;
   VmaAllocation tlasAlloc;
   vk::Buffer instanceBuffer;
+  VmaAllocation instanceAlloc;
 
   vk::AccelerationStructureInstanceKHR instance;
 };

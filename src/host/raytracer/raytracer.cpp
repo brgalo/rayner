@@ -14,8 +14,11 @@ Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom
 }
 
 Raytracer::~Raytracer() {
+  vlkn->getDevice().destroyAccelerationStructureKHR(tlas);
   vlkn->getVma()->destroyBuffer(tlasAlloc, tlasBuffer);
+  vlkn->getDevice().destroyAccelerationStructureKHR(blas);
   vlkn->getVma()->destroyBuffer(blasAlloc, blasBuffer);
+  vlkn->getVma()->destroyBuffer(instanceAlloc, instanceBuffer);
 }
 
 void Raytracer::buildBlas(GeometryHandler &geom) {
@@ -112,7 +115,6 @@ void Raytracer::buildTlas() {
   instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
   instance.accelerationStructureReference = blasAddress;
 
-  VmaAllocation instanceAlloc;
   VmaAllocationInfo instanceInfo;
   vk::BufferCreateInfo instanceBufferCreateInfo{
       {},
