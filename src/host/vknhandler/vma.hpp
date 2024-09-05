@@ -38,21 +38,25 @@ public:
                             VmaAllocation &alloc);
   vk::Buffer uploadIndices(const std::vector<uint32_t> &idx,
                            VmaAllocation &alloc);
+  vk::Buffer uploadInstanceB(const vk::AccelerationStructureInstanceKHR &instance,
+                             VmaAllocation &alloc);
   void updateDescriptor(const void *pData, vk::DeviceSize size,
                         VmaAllocationInfo &info);
-  
+
   vk::DeviceAddress getDeviceAddress(vk::Buffer buffer);
 
   VmaAllocator& vma() {return vma_;};
-  private:
+private:
   void init();
   VmaAllocator vma_;
   const vk::Device dev;
   const vk::Queue transferQ;
   const vk::CommandPool transferPool;
 
-  vk::Buffer uploadWithStaging(const void *pData, size_t site, VmaAllocation &alloc,
-                               vk::BufferUsageFlags usageFlags);
+  vk::Buffer uploadWithStaging(const void *pData, size_t site,
+                               VmaAllocation &alloc,
+                               vk::BufferUsageFlags usageFlags,
+                               VmaAllocationCreateInfo allocCreateInfo);
 
   void copyBuffer(vk::BufferCopy bufferCopy, vk::Buffer src, vk::Buffer dst);
 

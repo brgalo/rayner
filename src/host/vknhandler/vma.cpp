@@ -3,6 +3,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <vector>
+#include <vulkan/vulkan_handles.hpp>
 #define VMA_IMPLEMENTATION
 
 #include "vk_mem_alloc.h"
@@ -57,9 +58,8 @@ void VMA::copyBuffer(vk::BufferCopy bufferCopy, vk::Buffer src, vk::Buffer dst) 
 vk::Buffer VMA::createBuffer(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
                              VkBufferCreateInfo &createInfo,
                              VmaAllocationCreateInfo &allocCreateInfo) {
-  VkBufferCreateInfo bufInf = createInfo;
   VkBuffer temp;
-  vmaCreateBuffer(vma_, &bufInf, &allocCreateInfo, &temp, &alloc, &allocInfo);
+  vmaCreateBuffer(vma_, &createInfo, &allocCreateInfo, &temp, &alloc, &allocInfo);
   return temp;
 }
 
@@ -69,24 +69,40 @@ void VMA::destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer) {
 }
 
 vk::Buffer VMA::uploadGeometry(const void *pData, vk::DeviceSize size, VmaAllocation &alloc) {
-  return uploadWithStaging(pData, size, alloc, vk::BufferUsageFlagBits::eVertexBuffer);
+  return uploadWithStaging(pData, size, alloc,
+                           vk::BufferUsageFlagBits::eVertexBuffer,
+                           {{}, VMA_MEMORY_USAGE_GPU_ONLY});
 }
 
 vk::Buffer VMA::uploadVertices(const std::vector<glm::vec3> &verts,
                                VmaAllocation &alloc) {
   return uploadWithStaging(
-      verts.data(), sizeof(verts[0])*verts.size(), alloc,
+      verts.data(), sizeof(verts[0]) * verts.size(), alloc,
       vk::BufferUsageFlagBits::eVertexBuffer |
           vk::BufferUsageFlagBits::eShaderDeviceAddress |
-          vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR);
+          vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,
+      {{}, VMA_MEMORY_USAGE_GPU_ONLY});
 }
 
 vk::Buffer VMA::uploadIndices(const std::vector<uint32_t> &idx, VmaAllocation &alloc) {
   return uploadWithStaging(
-      idx.data(), sizeof(idx[0])*idx.size(), alloc,
+      idx.data(), sizeof(idx[0]) * idx.size(), alloc,
       vk::BufferUsageFlagBits::eIndexBuffer |
           vk::BufferUsageFlagBits::eShaderDeviceAddress |
-          vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR);
+          vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,
+      {{}, VMA_MEMORY_USAGE_GPU_ONLY});
+}
+
+vk::Buffer VMA::uploadInstanceB(const vk::AccelerationStructureInstanceKHR &instance, VmaAllocation &alloc) {
+  VmaAllocationCreateInfo instanceAllocCreateInfo{
+      VMA_ALLOCATION_CREATE_MAPPED_BIT, VMA_MEMORY_USAGE_GPU_ONLY,
+      VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT};
+
+  return uploadWithStaging(
+      &instance, sizeof(instance), alloc,
+      vk::BufferUsageFlagBits::eShaderDeviceAddress |
+          vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,
+      instanceAllocCreateInfo);
 }
 
 void VMA::updateDescriptor(const void *pData, vk::DeviceSize size,
@@ -99,7 +115,7 @@ vk::DeviceAddress VMA::getDeviceAddress(vk::Buffer buffer) {
 }
 
 vk::Buffer VMA::uploadWithStaging(const void *pData, size_t size,
-                                  VmaAllocation &alloc, vk::BufferUsageFlags usageFlags) {
+                                  VmaAllocation &alloc, vk::BufferUsageFlags usageFlags, VmaAllocationCreateInfo allocCreateInfo) {
   VmaAllocation stagingAlloc;
   VmaAllocationInfo stagingInfo;
   vk::Buffer stagingBuf = stagingBuffer(size, stagingAlloc, stagingInfo);
@@ -112,9 +128,9 @@ vk::Buffer VMA::uploadWithStaging(const void *pData, size_t size,
   vk::BufferCreateInfo createInfo{
       {}, size, usageFlags | vk::BufferUsageFlagBits::eTransferDst};
   VmaAllocationInfo bufferInfo;
-  VmaAllocationCreateInfo vmaInfo{{},VMA_MEMORY_USAGE_AUTO};
+//  VmaAllocationCreateInfo vmaInfo{{},VMA_MEMORY_USAGE_AUTO};
 
-  vk::Buffer dest = createBuffer(alloc, bufferInfo, createInfo, vmaInfo);
+  vk::Buffer dest = createBuffer(alloc, bufferInfo, createInfo, allocCreateInfo);
   copyBuffer(vk::BufferCopy{0, 0, size}, stagingBuf, dest);
   destroyBuffer(stagingAlloc, stagingBuf);
   return dest;

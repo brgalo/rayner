@@ -10,10 +10,12 @@
 namespace rn {
 Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom) : vlkn(vlkn_) {
   buildBlas(geom);
+  buildTlas();
 }
 
 Raytracer::~Raytracer() {
-  
+  vlkn->getVma()->destroyBuffer(tlasAlloc, tlasBuffer);
+  vlkn->getVma()->destroyBuffer(blasAlloc, blasBuffer);
 }
 
 void Raytracer::buildBlas(GeometryHandler &geom) {
@@ -85,6 +87,97 @@ void Raytracer::buildBlas(GeometryHandler &geom) {
   vk::Buffer scratch = vlkn->getVma()->createBuffer(
       scratchAlloc, scratchAllocInfo, scratchBufferCreateInfo, scratchInfo);
 
+  buildInfo.scratchData.deviceAddress =
+      vlkn->getDevice().getBufferAddress(scratch);
+
+  vk::CommandBuffer buffer = vlkn->beginSingleTimeCommands();
+  buffer.buildAccelerationStructuresKHR(buildInfo, &rangeInfo);
+  vlkn->endSingleTimeCommands(buffer);
+
+  // destroy buffers
+  vlkn->getVma()->destroyBuffer(scratchAlloc, scratch);
+}
+
+void Raytracer::buildTlas() {
+  vk::AccelerationStructureDeviceAddressInfoKHR addressInfo{blas};
+  vk::DeviceAddress blasAddress =
+      vlkn->getDevice().getAccelerationStructureAddressKHR(addressInfo);
+
+  instance.transform.matrix[0][0] = 1.f;
+  instance.transform.matrix[1][1] = 1.f;
+  instance.transform.matrix[2][2] = 1.f;
+  instance.instanceCustomIndex = 0;
+  instance.mask = 0xFF;
+  instance.instanceShaderBindingTableRecordOffset = 0;
+  instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+  instance.accelerationStructureReference = blasAddress;
+
+  VmaAllocation instanceAlloc;
+  VmaAllocationInfo instanceInfo;
+  vk::BufferCreateInfo instanceBufferCreateInfo{
+      {},
+      sizeof(instance),
+      vk::BufferUsageFlagBits::eTransferDst |
+          vk::BufferUsageFlagBits::eShaderDeviceAddress};
+
+  instanceBuffer = vlkn->getVma()->uploadInstanceB(instance, instanceAlloc);
+  vk::DeviceAddress instanceBufferAddress = vlkn->getVma()->getDeviceAddress(instanceBuffer);
+
+  vk::AccelerationStructureBuildRangeInfoKHR rangeInfo{1, 0, 0, 0};
+  vk::AccelerationStructureGeometryInstancesDataKHR instancesVK {
+    VK_FALSE,instanceBufferAddress};
+
+  vk::AccelerationStructureGeometryKHR geometry{vk::GeometryTypeKHR::eInstances,
+                                                instancesVK};
+  vk::AccelerationStructureBuildGeometryInfoKHR buildInfo{
+      vk::AccelerationStructureTypeKHR::eTopLevel,
+      vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastBuild,
+      vk::BuildAccelerationStructureModeKHR::eBuild,
+      VK_NULL_HANDLE,
+      VK_NULL_HANDLE,
+      1,
+      &geometry};
+
+  vk::AccelerationStructureBuildSizesInfoKHR sizeInfo =
+      vlkn->getDevice().getAccelerationStructureBuildSizesKHR(
+          vk::AccelerationStructureBuildTypeKHR::eDevice, buildInfo, 1);
+
+  vk::BufferCreateInfo tlasBufferCreateInfo{
+      {},
+      sizeInfo.accelerationStructureSize,
+      vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR |
+          vk::BufferUsageFlagBits::eShaderDeviceAddress |
+          vk::BufferUsageFlagBits::eStorageBuffer};
+
+  VmaAllocationInfo tlasInfo{};
+  VmaAllocationCreateInfo tlasAllocCreateInfo{
+      {}, VMA_MEMORY_USAGE_GPU_ONLY, VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT};
+  tlasBuffer = vlkn->getVma()->createBuffer(
+      tlasAlloc, tlasInfo, tlasBufferCreateInfo, tlasAllocCreateInfo);
+
+  vk::AccelerationStructureCreateInfoKHR createInfo{
+      {}, tlasBuffer, 0, sizeInfo.accelerationStructureSize, buildInfo.type};
+  tlas = vlkn->getDevice().createAccelerationStructureKHR(createInfo);
+
+  buildInfo.dstAccelerationStructure = tlas;
+
+  // scratch buffer
+  VmaAllocation scratchAlloc;
+  VmaAllocationInfo scratchAllocInfo;
+  vk::BufferCreateInfo scratchBufferCreateInfo{
+      {},
+      sizeInfo.buildScratchSize,
+      vk::BufferUsageFlagBits::eStorageBuffer |
+          vk::BufferUsageFlagBits::eShaderDeviceAddress};
+  VmaAllocationCreateInfo scratchInfo{
+    VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+        VMA_ALLOCATION_CREATE_MAPPED_BIT,
+      VMA_MEMORY_USAGE_GPU_ONLY,
+      VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT,
+      {}};
+  vk::Buffer scratch = vlkn->getVma()->createBuffer(
+      scratchAlloc, scratchAllocInfo, scratchBufferCreateInfo, scratchInfo);
+
   vk::MemoryAllocateInfo allocInfo{sizeInfo.buildScratchSize};
   buildInfo.scratchData.deviceAddress =
       vlkn->getDevice().getBufferAddress(scratch);
@@ -92,5 +185,9 @@ void Raytracer::buildBlas(GeometryHandler &geom) {
   vk::CommandBuffer buffer = vlkn->beginSingleTimeCommands();
   buffer.buildAccelerationStructuresKHR(buildInfo, &rangeInfo);
   vlkn->endSingleTimeCommands(buffer);
+
+  // destroy buffers
+  vlkn->getVma()->destroyBuffer(scratchAlloc, scratch);
 }
-}
+
+} // namespace rn
