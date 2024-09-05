@@ -1,19 +1,18 @@
 #include "raytracer.hpp"
-#include "vma.hpp"
+#include "descriptors.hpp"
 #include "vknhandler.hpp"
-#include <cstdint>
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_enums.hpp>
+#include "vma.hpp"
 #include <vulkan/vulkan_handles.hpp>
-#include <vulkan/vulkan_structs.hpp>
 
 namespace rn {
-Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom) : vlkn(vlkn_) {
+Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom) : vlkn(vlkn_), descriptor(vlkn_){
   buildBlas(geom);
   buildTlas();
+  createShaderModules();
 }
 
 Raytracer::~Raytracer() {
+  vlkn->getDevice().destroyDescriptorSetLayout(layout);
   vlkn->getDevice().destroyAccelerationStructureKHR(tlas);
   vlkn->getVma()->destroyBuffer(tlasAlloc, tlasBuffer);
   vlkn->getDevice().destroyAccelerationStructureKHR(blas);

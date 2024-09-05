@@ -2,12 +2,17 @@
 #include "descriptors.hpp"
 #include "geometryloader/geometry.hpp"
 #include "vknhandler.hpp"
+#include <array>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <fstream>
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan_enums.hpp>
+#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 
@@ -46,7 +51,43 @@ GraphicsPipelinePoints::GraphicsPipelinePoints(
         init("spv/pts.vert.spv", "spv/pts.frag.spv");
 };
 
+RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
+                                       vk::PipelineBindPoint bindP,
+                                       std::shared_ptr<VulkanHandler> vulkn_)
+    : Pipeline(set_, bindP, vulkn_) {
+      RaytracingPipeline::createLayout();
 
+      vk::ShaderModule cHit = createModule("spv/rt.rchit.spv");
+      vk::ShaderModule rGen = createModule("spv/rt.rgen.spv");
+      vk::ShaderModule rMiss = createModule("spv/rt.rmiss.spv");
+
+      std::array<vk::PipelineShaderStageCreateInfo, 3> shaderStages{
+          {{{}, vk::ShaderStageFlagBits::eRaygenKHR, rGen, "main"},
+           {{}, vk::ShaderStageFlagBits::eClosestHitKHR, cHit, "main"},
+           {{}, vk::ShaderStageFlagBits::eMissKHR, rMiss, "main"}}};
+
+      std::array<vk::RayTracingShaderGroupCreateInfoKHR, 3> rtsgci{
+          {{vk::RayTracingShaderGroupTypeKHR::eGeneral, 0, vk::ShaderUnusedKHR,
+            vk::ShaderUnusedKHR, vk::ShaderUnusedKHR},
+           {vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup,
+            vk::ShaderUnusedKHR, 1, vk::ShaderUnusedKHR, vk::ShaderUnusedKHR},
+           {vk::RayTracingShaderGroupTypeKHR::eGeneral, 2, vk::ShaderUnusedKHR,
+            vk::ShaderUnusedKHR, vk::ShaderUnusedKHR}}};
+      vk::RayTracingPipelineCreateInfoKHR rtpci{{}, shaderStages, rtsgci};
+      rtpci.layout = layout_;
+
+      pipeline_ = vlkn->getDevice()
+                      .createRayTracingPipelinesKHR(VK_NULL_HANDLE,
+                                                    VK_NULL_HANDLE, rtpci)
+                      .value.front();
+      
+        
+
+      destroyModule(cHit);
+      destroyModule(rGen);
+      destroyModule(rMiss);
+  
+};
 
 
 
@@ -140,6 +181,11 @@ void GraphicsPipeline::create(vk::GraphicsPipelineCreateInfo &info) {
   pipeline_ = res.value;
 }
 
+void RaytracingPipeline::createLayout() {
+  vk::PipelineLayoutCreateInfo layoutInfo{{},1,&set.getLayout()};
+  layout_ = vlkn->getDevice().createPipelineLayout(layoutInfo);
+};
+
 void GraphicsPipeline::init(const std::string &vertPath,
                             const std::string &fragPath) {
   createLayout();
@@ -204,7 +250,6 @@ void GraphicsPipeline::createLayout() {
   std::vector<vk::DescriptorSetLayout> layouts{set.getLayout()};
   vk::PipelineLayoutCreateInfo createInfo{{}, layouts, constRange};
   layout_ = vlkn->getDevice().createPipelineLayout(createInfo);
-}
-
+};
 
 }

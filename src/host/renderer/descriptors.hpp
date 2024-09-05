@@ -44,12 +44,12 @@ public:
   vk::CommandBuffer bind();
 
 protected:
-  virtual void createSets();
+  virtual void createSets(uint32_t numSets = SwapChain::MAX_FRAMES_IN_FLIGHT);
   std::shared_ptr<VulkanHandler> vlkn = nullptr;
   std::vector<vk::Buffer> buffers;
   std::vector<VmaAllocation> allocs;
   std::vector<VmaAllocationInfo> allocInfos;
-  void createPool();
+  void createPool(uint32_t maxSets);
   void freeSets();
 
   std::vector<vk::DescriptorSet> sets;
@@ -66,7 +66,7 @@ class RenderDescriptors : public DescriptorSet {
 public:
   RenderDescriptors(std::shared_ptr<VulkanHandler> vlkn) : DescriptorSet(vlkn) {
     addPoolSize(vk::DescriptorType::eUniformBuffer, 2);
-    createPool();
+    createPool(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
     addBinding(0, vk::DescriptorType::eUniformBuffer,
                vk::ShaderStageFlagBits::eVertex);
@@ -99,7 +99,22 @@ private:
       return clip * projection * view * model;}
   } ub;
 
-  void createSets() override;
+  void createSets(uint32_t numSets = SwapChain::MAX_FRAMES_IN_FLIGHT) override;
 };
+
+class TraceDescriptors : public DescriptorSet {
+public:
+  TraceDescriptors(std::shared_ptr<VulkanHandler> vlkn_) : DescriptorSet(vlkn_) {
+    addPoolSize(vk::DescriptorType::eAccelerationStructureKHR, 1);
+    createPool(1);
+
+    addBinding(0, vk::DescriptorType::eAccelerationStructureKHR,
+               vk::ShaderStageFlagBits::eRaygenKHR);
+    TraceDescriptors::createSets(1);
+//    updateSet();
+  };
+  void updateSet();
+};
+
 
 } // namespace rn

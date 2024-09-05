@@ -112,5 +112,11 @@ class ComputePipeline : Pipeline {
 
 };
 
-class RaytracingPipeline : Pipeline {};
+class RaytracingPipeline : Pipeline {
+public:
+  RaytracingPipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
+                     std::shared_ptr<VulkanHandler> vulkn_);
+private:
+  void createLayout() override;
+};
 }

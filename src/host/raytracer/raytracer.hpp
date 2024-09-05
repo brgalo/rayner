@@ -1,9 +1,11 @@
 #pragma once
 
+#include "descriptors.hpp"
 #include "geometryloader/geometry.hpp"
+#include "pipeline.hpp"
 #include "vk_mem_alloc.h"
 #include "vknhandler.hpp"
-#include <vulkan/vulkan_structs.hpp>
+#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 class Raytracer {
@@ -15,6 +17,10 @@ private:
   std::shared_ptr<VulkanHandler> vlkn;
   void buildBlas(GeometryHandler &geom);
   void buildTlas();
+  void buildDescriptorSet();
+  void createShaderModules();
+  void createRtPipelineLayout();
+  void createRtPipeline();
 
   vk::AccelerationStructureKHR blas;
   vk::AccelerationStructureKHR tlas;
@@ -26,6 +32,12 @@ private:
   VmaAllocation instanceAlloc;
 
   vk::AccelerationStructureInstanceKHR instance;
+  TraceDescriptors descriptor;
+  vk::DescriptorSetLayout layout;
+  vk::DescriptorPool pool;
+  vk::DescriptorSet set;
+
+  RaytracingPipeline rtPipeline;
 };
 
-}
+} // namespace rn

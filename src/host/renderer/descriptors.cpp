@@ -7,12 +7,9 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
-#include <cstring>
 #include <glm/fwd.hpp>
-#include <stdexcept>
-#include <vector>
-#include <vulkan/vulkan_core.h>
 namespace rn {
 
 DescriptorSet::~DescriptorSet() {
@@ -38,9 +35,9 @@ void DescriptorSet::updateSets() {
   vlkn->getDevice().updateDescriptorSets(writes, nullptr);
 }
 
-void DescriptorSet::createPool() {
+void DescriptorSet::createPool(uint32_t maxSets) {
   vk::DescriptorPoolCreateInfo createInfo{
-      {}, SwapChain::MAX_FRAMES_IN_FLIGHT, poolSize};
+      {}, maxSets, poolSize};
   pool = vlkn->getDevice().createDescriptorPool(createInfo);
 }
 
@@ -51,7 +48,7 @@ void DescriptorSet::addBinding(uint32_t bindingNo, vk::DescriptorType type, vk::
   bindings[bindingNo] = binding;
 }
 
-void DescriptorSet::createSets() {
+void DescriptorSet::createSets(const uint32_t numSets) {
   std::vector<vk::DescriptorSetLayoutBinding> layoutB;
   for (auto &b : bindings) {
     layoutB.push_back(b.second);
@@ -59,24 +56,26 @@ void DescriptorSet::createSets() {
 
   layout = vlkn->getDevice().createDescriptorSetLayout(
       vk::DescriptorSetLayoutCreateInfo{{}, layoutB});
-  std::array<vk::DescriptorSetLayout, SwapChain::MAX_FRAMES_IN_FLIGHT>
-      layouts{layout, layout};
+  std::vector<vk::DescriptorSetLayout> layouts{};
+  for (int i = 0; i < numSets; ++i) {
+  layouts.push_back(layout);
+  }
 
   vk::DescriptorSetAllocateInfo info{pool, layouts};
   sets = vlkn->getDevice().allocateDescriptorSets(info);
 
 }
 
-void RenderDescriptors::createSets() {
+void RenderDescriptors::createSets(uint32_t numSets) {
   DescriptorSet::createSets();
   vk::BufferCreateInfo createInfo{
       {}, sizeof(UniformBuffer), vk::BufferUsageFlagBits::eUniformBuffer};
-  allocs.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-  allocInfos.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+  allocs.resize(numSets);
+  allocInfos.resize(numSets);
   VmaAllocationCreateInfo allocCreateInfo{
       VMA_ALLOCATION_CREATE_MAPPED_BIT|VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, VMA_MEMORY_USAGE_AUTO,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, 0, 0};
-  for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
+  for (size_t i = 0; i < numSets; ++i) {
     buffers.push_back(vlkn->getVma()->createBuffer(
         allocs[i], allocInfos[i], createInfo, allocCreateInfo));
   }
