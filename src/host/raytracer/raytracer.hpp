@@ -18,7 +18,6 @@ private:
   void buildBlas(GeometryHandler &geom);
   void buildTlas();
   void buildDescriptorSet();
-  void createShaderModules();
   void createRtPipelineLayout();
   void createRtPipeline();
 

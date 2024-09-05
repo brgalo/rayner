@@ -2,14 +2,19 @@
 #include "descriptors.hpp"
 #include "vknhandler.hpp"
 #include "vma.hpp"
+#include <vulkan/vulkan_enums.hpp>
 #include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
-Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom) : vlkn(vlkn_), descriptor(vlkn_){
+Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
+                     GeometryHandler &geom)
+    : vlkn(vlkn_), descriptor(vlkn_),
+      rtPipeline(descriptor, vk::PipelineBindPoint::eRayTracingKHR,
+                 vlkn) {
   buildBlas(geom);
   buildTlas();
-  createShaderModules();
-}
+};
+
 
 Raytracer::~Raytracer() {
   vlkn->getDevice().destroyDescriptorSetLayout(layout);
@@ -190,5 +195,6 @@ void Raytracer::buildTlas() {
   // destroy buffers
   vlkn->getVma()->destroyBuffer(scratchAlloc, scratch);
 }
+
 
 } // namespace rn

@@ -5,7 +5,6 @@
 
 
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-#include <vulkan/vulkan.h>
 #include <vulkan/vulkan.hpp>
 
 #include "glm/glm.hpp"
@@ -29,7 +28,7 @@ public:
   vk::Buffer createBuffer(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
                           VkBufferCreateInfo &createInfo,
                           VmaAllocationCreateInfo &allocCreateInfo);
-  void destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer);
+  void destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer) const;
   //vk::Buffer a;
 
   vk::Buffer uploadGeometry(const void *pData, vk::DeviceSize size,

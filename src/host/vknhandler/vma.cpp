@@ -63,7 +63,7 @@ vk::Buffer VMA::createBuffer(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
   return temp;
 }
 
-void VMA::destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer) {
+void VMA::destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer) const {
   VkBuffer temp = buffer;
   vmaDestroyBuffer(vma_, temp, alloc);
 }

@@ -1,18 +1,16 @@
 #include "pipeline.hpp"
 #include "descriptors.hpp"
 #include "geometryloader/geometry.hpp"
+#include "vk_mem_alloc.h"
 #include "vknhandler.hpp"
 #include <array>
-#include <iterator>
+#include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include "vma.hpp"
 #include <fstream>
-#include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_enums.hpp>
-#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 
@@ -51,6 +49,11 @@ GraphicsPipelinePoints::GraphicsPipelinePoints(
         init("spv/pts.vert.spv", "spv/pts.frag.spv");
 };
 
+RaytracingPipeline::~RaytracingPipeline() {
+  vlkn->getVma()->destroyBuffer(sbtAlloc, sbtBuffer);
+}
+
+
 RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
                                        vk::PipelineBindPoint bindP,
                                        std::shared_ptr<VulkanHandler> vulkn_)
@@ -80,13 +83,92 @@ RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
                       .createRayTracingPipelinesKHR(VK_NULL_HANDLE,
                                                     VK_NULL_HANDLE, rtpci)
                       .value.front();
-      
-        
-
       destroyModule(cHit);
       destroyModule(rGen);
       destroyModule(rMiss);
-  
+
+      uint32_t missCount = 1;
+      uint32_t hitCount = 1;
+      uint32_t rgCount = 1;
+
+      vk::PhysicalDeviceRayTracingPipelinePropertiesKHR props = {};
+      vk::PhysicalDeviceProperties2 props2 = {};
+      props2.pNext = &props;
+      vlkn->getPhysDevice().getProperties2(&props2);
+      
+      uint32_t handleCount = static_cast<uint32_t>(rtsgci.size());
+      uint32_t handleSize = props.shaderGroupHandleSize;
+      uint32_t handleSizeAligned =
+          alignUp(handleSize, props.shaderGroupBaseAlignment);
+      rgenRegion.stride =
+          alignUp(handleSizeAligned, props.shaderGroupBaseAlignment);
+      rgenRegion.size = rgenRegion.stride;
+
+      missRegion.stride = handleSizeAligned;
+      missRegion.size = alignUp(missCount * handleSizeAligned,
+                                props.shaderGroupBaseAlignment);
+      hitRegion.stride = handleSizeAligned;
+      hitRegion.size =
+          alignUp(hitCount * handleSizeAligned, props.shaderGroupBaseAlignment);
+
+      uint32_t dataSize = handleCount * handleSize;
+      handles.resize(dataSize);
+
+      if (vulkn_->getDevice().getRayTracingShaderGroupHandlesKHR(
+              pipeline_, 0, handleCount, dataSize, handles.data()) !=
+          vk::Result::eSuccess) {
+        throw std::runtime_error("failed to retrieve shader group handles!");
+      }
+      vk::DeviceSize sbtSize =
+          rgenRegion.size + missRegion.size + hitRegion.size;
+      vk::BufferCreateInfo sbtBufferInfo{
+          {},
+          sbtSize,
+          vk::BufferUsageFlagBits::eTransferSrc |
+              vk::BufferUsageFlagBits::eShaderDeviceAddress |
+              vk::BufferUsageFlagBits::eShaderBindingTableKHR};
+      VmaAllocationCreateInfo sbtAllocCreateInfo{
+          VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+              VMA_ALLOCATION_CREATE_MAPPED_BIT,
+          VMA_MEMORY_USAGE_GPU_ONLY,
+          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+
+
+      sbtBuffer = vlkn->getVma()->createBuffer(
+          sbtAlloc, sbtAllocInfo, sbtBufferInfo, sbtAllocCreateInfo);
+
+
+      vk::DeviceAddress sbtAdress =
+          vulkn_->getDevice().getBufferAddress(sbtBuffer);
+      rgenRegion.deviceAddress = sbtAdress;
+      hitRegion.deviceAddress = sbtAdress + rgenRegion.size;
+      missRegion.deviceAddress = sbtAdress + rgenRegion.size + hitRegion.size;
+
+      std::vector<uint8_t> sbtDataHost(sbtSize);
+      uint32_t handleIdx = 0;
+      uint8_t *pData = sbtDataHost.data();
+      auto getHandle = [&](int i) { return handles.data() + i * handleSize; };
+
+      // raygen
+      memcpy(pData, getHandle(handleIdx++), handleSize);
+
+      // chit
+      pData = sbtDataHost.data() + rgenRegion.size;
+      for (uint32_t c = 0; c < hitCount; ++c) {
+        memcpy(pData, getHandle(handleIdx++), handleSize);
+        pData += hitRegion.stride;
+      }
+        // miss
+  pData = sbtDataHost.data() + rgenRegion.size + hitRegion.size;
+  for (uint32_t c = 0; c < missCount; ++c) {
+    memcpy(pData, getHandle(handleIdx++), handleSize);
+    pData += missRegion.stride;
+  }
+  vlkn->getVma().(sbtBuffer);
+  sbtBuffer->writeToBuffer(sbtDataHost.data());
+  sbtBuffer->unmap();
+
 };
 
 
@@ -251,5 +333,13 @@ void GraphicsPipeline::createLayout() {
   vk::PipelineLayoutCreateInfo createInfo{{}, layouts, constRange};
   layout_ = vlkn->getDevice().createPipelineLayout(createInfo);
 };
+
+uint32_t RaytracingPipeline::alignUp(uint32_t val, uint32_t align) {
+  uint32_t remainder = val % align;
+  if (remainder == 0)
+    return val;
+  return val + align - remainder;
+};
+
 
 }
