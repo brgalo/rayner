@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <glm/fwd.hpp>
+#include <vulkan/vulkan_handles.hpp>
+#include <vulkan/vulkan_structs.hpp>
 namespace rn {
 
 DescriptorSet::~DescriptorSet() {
@@ -86,6 +88,16 @@ void RenderDescriptors::update(const glm::mat4 &mat, size_t idx) {
   memcpy(allocInfos.at(idx).pMappedData, &mat, sizeof(glm::mat4));
   vk::MappedMemoryRange range(allocInfos.at(idx).deviceMemory,0,VK_WHOLE_SIZE);
   vlkn->getDevice().flushMappedMemoryRanges(range);
+}
+
+void TraceDescriptors::writeSetup(vk::AccelerationStructureKHR &pTLAS) {
+  vk::WriteDescriptorSetAccelerationStructureKHR
+      descriptorAccelerationStructure{pTLAS};
+  vk::WriteDescriptorSet tlasWrite{
+  sets.front(), 0, 0, 1, vk::DescriptorType::eAccelerationStructureKHR};
+  write = tlasWrite;
+  tlasWrite.pNext = &descriptorAccelerationStructure;
+
 }
 
 } // namespace rn

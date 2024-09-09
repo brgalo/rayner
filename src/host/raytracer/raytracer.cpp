@@ -2,6 +2,8 @@
 #include "descriptors.hpp"
 #include "vknhandler.hpp"
 #include "vma.hpp"
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan_enums.hpp>
 namespace rn {
 Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
                      GeometryHandler &geom)
@@ -11,6 +13,7 @@ Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
   buildBlas(geom);
   buildTlas();
   buildDescriptorSet();
+  trace();
 };
 
 
@@ -194,22 +197,20 @@ void Raytracer::buildTlas() {
   vlkn->getVma()->destroyBuffer(scratchAlloc, scratch);
 }
 
-void Raytracer::buildDescriptorSet() {
-  vk::WriteDescriptorSetAccelerationStructureKHR
-      descriptorAccelerationStructure{tlas};
-  vk::WriteDescriptorSet tlasWrite{
-      set, 0, 0, 1, vk::DescriptorType::eAccelerationStructureKHR};
-  tlasWrite.pNext = &descriptorAccelerationStructure;
+void Raytracer::buildDescriptorSet() { descriptor.writeSetup(tlas); }
 
-  vk::DescriptorSetAllocateInfo allocInfo{pool,layout,
-  };
+void Raytracer::trace() {
+  vk::CommandBuffer buffer = vlkn->beginSingleTimeCommands();
+  rtPipeline.bind(buffer);
+  buffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR,
+                            rtPipeline.getLayout(), 0, 1,
+                            &descriptor.getSets().front(), 0, nullptr);
+  buffer.traceRaysKHR(rtPipeline.rgenRegion, rtPipeline.missRegion,
+                      rtPipeline.hitRegion, {}, 1000, 1, 1);
+  vlkn->endSingleTimeCommands(buffer);
+  vlkn->getDevice().waitIdle();
 
-  set = vlkn->getDevice().allocateDescriptorSets(allocInfo, set).front();
-
-
-  
 
 }
-
-
-} // namespace rn
+// namespace rn
+}

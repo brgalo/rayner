@@ -9,6 +9,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <vulkan/vulkan_structs.hpp>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -51,13 +52,15 @@ protected:
   std::vector<VmaAllocationInfo> allocInfos;
   void createPool(uint32_t maxSets);
   void freeSets();
+  vk::DescriptorPool pool;
+  vk::DescriptorSetLayout layout;
 
+
+  std::unordered_map<uint32_t, vk::DescriptorSetLayoutBinding> bindings;
   std::vector<vk::DescriptorSet> sets;
 private:
 
-  std::unordered_map<uint32_t, vk::DescriptorSetLayoutBinding> bindings;
-  vk::DescriptorSetLayout layout;
-  vk::DescriptorPool pool;
+
   std::vector<vk::DescriptorPoolSize> poolSize;
 };
 
@@ -110,10 +113,17 @@ public:
 
     addBinding(0, vk::DescriptorType::eAccelerationStructureKHR,
                vk::ShaderStageFlagBits::eRaygenKHR);
-    TraceDescriptors::createSets(1);
-//    updateSet();
+
+
+    layout = vlkn->getDevice().createDescriptorSetLayout(
+      vk::DescriptorSetLayoutCreateInfo{{},bindings.at(0)});
+      vk::DescriptorSetAllocateInfo allocInfo{pool, layout};
+  sets = vlkn->getDevice().allocateDescriptorSets(allocInfo);
   };
-  void updateSet();
+
+  void  writeSetup(vk::AccelerationStructureKHR &pTLAS);
+private:
+vk::WriteDescriptorSet write;
 };
 
 

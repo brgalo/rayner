@@ -260,7 +260,7 @@ DescriptorWriter::DescriptorWriter(DescriptorSetLayout &setLayout,
 
 // raytracing
 
-/*
+
 bool DescriptorWriter::writeandBuildTLAS(uint32_t binding,
                                          vk::AccelerationStructureKHR *pTLAS,
                                          vk::DescriptorSet &descriptorSet,
@@ -295,7 +295,7 @@ bool DescriptorWriter::writeandBuildTLAS(uint32_t binding,
   return this->build(descriptorSet);
 }
 
-*/
+
 DescriptorWriter &
 DescriptorWriter::writeBuffer(uint32_t binding,
                               vk::DescriptorBufferInfo *bufferInfo) {

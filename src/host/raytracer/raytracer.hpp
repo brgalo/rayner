@@ -17,6 +17,7 @@ private:
   void buildBlas(GeometryHandler &geom);
   void buildTlas();
   void buildDescriptorSet();
+  void trace();
 
   vk::AccelerationStructureKHR blas;
   vk::AccelerationStructureKHR tlas;

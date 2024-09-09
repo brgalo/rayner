@@ -114,22 +114,21 @@ class ComputePipeline : Pipeline {
 
 };
 
-class RaytracingPipeline : Pipeline {
+class RaytracingPipeline : public Pipeline {
 public:
   RaytracingPipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
                      std::shared_ptr<VulkanHandler> vulkn_);
   ~RaytracingPipeline();
   
-
+  VkStridedDeviceAddressRegionKHR rgenRegion{};
+  VkStridedDeviceAddressRegionKHR hitRegion{};
+  VkStridedDeviceAddressRegionKHR missRegion{};
 
 private:
   void config() override {};
   void createLayout() override;
   uint32_t alignUp(uint32_t val, uint32_t align);
 
-  VkStridedDeviceAddressRegionKHR rgenRegion{};
-  VkStridedDeviceAddressRegionKHR hitRegion{};
-  VkStridedDeviceAddressRegionKHR missRegion{};
   std::vector<uint8_t> handles{};
 
   vk::Buffer sbtBuffer;
