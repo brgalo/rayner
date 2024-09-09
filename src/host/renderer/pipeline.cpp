@@ -11,6 +11,7 @@
 #include <vector>
 #include "vma.hpp"
 #include <fstream>
+#include <vulkan/vulkan_structs.hpp>
 
 namespace rn {
 
@@ -265,7 +266,9 @@ void GraphicsPipeline::create(vk::GraphicsPipelineCreateInfo &info) {
 }
 
 void RaytracingPipeline::createLayout() {
-  vk::PipelineLayoutCreateInfo layoutInfo{{},1,&set.getLayout()};
+  vk::PushConstantRange constRange{vk::ShaderStageFlagBits::eRaygenKHR, 0,
+                                   sizeof(RtConsts)};
+  vk::PipelineLayoutCreateInfo layoutInfo{{}, set.getLayout(), constRange};
   layout_ = vlkn->getDevice().createPipelineLayout(layoutInfo);
 };
 
@@ -325,15 +328,25 @@ std::vector<char> Pipeline::readFile(const std::string &filepath) {
   return buffer;  
 };
 
+void GraphicsPipelinePoints::createLayout() {
+  vk::PushConstantRange constRange{vk::ShaderStageFlagBits::eVertex |
+                            vk::ShaderStageFlagBits::eFragment,
+                        0, sizeof(uint64_t)};
+  Pipeline::createLayout(constRange);
+};
+
 void GraphicsPipeline::createLayout() {
   vk::PushConstantRange constRange{vk::ShaderStageFlagBits::eVertex |
                             vk::ShaderStageFlagBits::eFragment,
                         0, sizeof(RenderPushConstsData)};
+  Pipeline::createLayout(constRange);
+};
 
-  std::vector<vk::DescriptorSetLayout> layouts{set.getLayout()};
+void Pipeline::createLayout(vk::PushConstantRange &constRange) {
+    std::vector<vk::DescriptorSetLayout> layouts{set.getLayout()};
   vk::PipelineLayoutCreateInfo createInfo{{}, layouts, constRange};
   layout_ = vlkn->getDevice().createPipelineLayout(createInfo);
-};
+}
 
 uint32_t RaytracingPipeline::alignUp(uint32_t val, uint32_t align) {
   uint32_t remainder = val % align;

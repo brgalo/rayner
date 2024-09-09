@@ -5,6 +5,8 @@ project("RAYNER")
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 
+add_definitions(-DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1)
+
 find_package(Vulkan REQUIRED COMPONENTS glslc)
 
 #glfw

@@ -9,6 +9,7 @@
 #include "pipeline.hpp"
 #include "gui.hpp"
 #include <memory>
+#include <sys/types.h>
 #include <vector>
 
 
@@ -32,7 +33,7 @@ public:
   bool run();
   Renderer(const Renderer &) = delete;
   Renderer &operator=(const Renderer &) = delete;
-  void render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx);
+  void render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx, uint64_t outBufferAdress = 0);
   void updateCamera(float frameTime);
 private:
   std::shared_ptr<VulkanHandler> vlkn = nullptr;

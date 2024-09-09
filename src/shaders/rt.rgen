@@ -2,10 +2,24 @@
 
 #include "commonrt.glsl"
 
+struct pushConsts {
+    uint64_t outBufferAdress;
+};
+
+layout(push_constant) uniform _pushConsts { pushConsts consts;};
+
+
+layout(buffer_reference, scalar) buffer OutBuffer{vec4 outs[];};
+
+
 layout(location = 0) rayPayloadEXT RayPayload payload;
 
 layout(set = 0, binding = 0) uniform accelerationStructureEXT scene;
 
 void main() {
+    OutBuffer outbuf = OutBuffer(consts.outBufferAdress);
+
+
     traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, vec3(0,0,0),0,vec3(1,0,0),1000,0);
+    outbuf.outs[gl_LaunchIDEXT.x] = vec4(gl_LaunchIDEXT.x,1,0,1);
 }

@@ -39,7 +39,7 @@ void Renderer::updateCamera(float frameTime) {
   camera.updateView(frameTime);
 }
 
-void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx) {
+void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx, uint64_t outBufferAdress) {
   auto idx =
       swapChain.aquireNextImage(swapChain.inFlightFences.at(syncIdx),
                                 swapChain.imageAvailableSemaphores.at(syncIdx));
@@ -93,7 +93,7 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nI
   buffer.pushConstants(pipelinePts.getLayout(),
                        vk::ShaderStageFlagBits::eVertex |
                            vk::ShaderStageFlagBits::eFragment,
-                       0, sizeof(Consts), &consts);
+                       0, sizeof(uint64_t), &outBufferAdress);
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                             pipelinePts.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);

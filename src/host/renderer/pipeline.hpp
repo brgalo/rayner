@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vulkan/vulkan.hpp>
 #include "descriptors.hpp"
 #include "geometryloader/geometry.hpp"
 #include "vknhandler.hpp"
@@ -53,6 +54,7 @@ public:
 protected:
   virtual void config() = 0;
   virtual void createLayout() = 0;
+  void createLayout(vk::PushConstantRange &constRange);
   PipelineConfigInfo configInfo = {};
 
   vk::Pipeline pipeline_;
@@ -108,6 +110,7 @@ public:
 
 private:
   void config() override;
+  void createLayout() override;
 };
 
 class ComputePipeline : Pipeline {
@@ -123,6 +126,12 @@ public:
   VkStridedDeviceAddressRegionKHR rgenRegion{};
   VkStridedDeviceAddressRegionKHR hitRegion{};
   VkStridedDeviceAddressRegionKHR missRegion{};
+
+  struct RtConsts {
+ //   vk::DeviceAddress verts;
+ //   vk::DeviceAddress idx;
+    vk::DeviceAddress out;
+  } consts;
 
 private:
   void config() override {};

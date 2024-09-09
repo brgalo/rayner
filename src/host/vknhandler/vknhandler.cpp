@@ -272,6 +272,7 @@ void VulkanHandler::createLogicalDevice() {
   vk::PhysicalDeviceFeatures features;
   features.wideLines = VK_TRUE;
   features.largePoints = VK_TRUE;
+  features.shaderInt64 = VK_TRUE;
 
   vk::DeviceCreateInfo createInfo({}, queueInfos, {}, deviceExtensionNames,
                                   &features, &address);

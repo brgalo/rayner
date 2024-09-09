@@ -7,17 +7,12 @@
 #define VK_USE_PLATFORM_XCB_KHR
 #endif
 
-#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #include <vulkan/vulkan.hpp>
 
 
 
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
-#ifndef VMA_H
-#define VMA_H
-#include "vk_mem_alloc.h"
-#endif
 
 namespace rn {
 

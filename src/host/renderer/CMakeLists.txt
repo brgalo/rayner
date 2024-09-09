@@ -27,4 +27,5 @@ include_directories(../../libs/Vulkan-Hpp/glfw/include
 target_link_libraries(renderer PRIVATE Vulkan::Vulkan
                                        glfw
                                        pipeline
-                                       gui)
+                                       gui
+                                       vknhandler)

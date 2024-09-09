@@ -1,9 +1,9 @@
 #include "raytracer.hpp"
 #include "descriptors.hpp"
+#include "pipeline.hpp"
 #include "vknhandler.hpp"
 #include "vma.hpp"
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_enums.hpp>
+
 namespace rn {
 Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
                      GeometryHandler &geom)
@@ -202,15 +202,46 @@ void Raytracer::buildDescriptorSet() { descriptor.writeSetup(tlas); }
 void Raytracer::trace() {
   vk::CommandBuffer buffer = vlkn->beginSingleTimeCommands();
   rtPipeline.bind(buffer);
+  buffer.pushConstants(
+      rtPipeline.getLayout(), vk::ShaderStageFlagBits::eRaygenKHR, 0,
+      sizeof(RaytracingPipeline::RtConsts), &rtPipeline.consts);
+  
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR,
                             rtPipeline.getLayout(), 0, 1,
                             &descriptor.getSets().front(), 0, nullptr);
   buffer.traceRaysKHR(rtPipeline.rgenRegion, rtPipeline.missRegion,
                       rtPipeline.hitRegion, {}, 1000, 1, 1);
   vlkn->endSingleTimeCommands(buffer);
+  vlkn->getGqueue().waitIdle();
   vlkn->getDevice().waitIdle();
-
-
 }
+
+void Raytracer::updatePushConstants(GeometryHandler &geom) {
+//  rtPipeline.consts.verts = vlkn->getVma()->getDeviceAddress(geom.getVert());
+//  rtPipeline.consts.idx = vlkn->getVma()->getDeviceAddress(geom.getIdx());
+  rtPipeline.consts.out = vlkn->getVma()->getDeviceAddress(outBuffer);
+}
+
+void Raytracer::createOutputBuffer() {
+  VmaAllocationInfo outAllocInfo;
+  vk::DeviceSize size = sizeof(glm::vec3)*outData.size();
+  vk::BufferCreateInfo outBufferCreateInfo{
+      {},
+      size,
+      vk::BufferUsageFlagBits::eStorageBuffer |
+          vk::BufferUsageFlagBits::eShaderDeviceAddress};
+  VmaAllocationCreateInfo outInfo{
+    VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+        VMA_ALLOCATION_CREATE_MAPPED_BIT,
+      VMA_MEMORY_USAGE_AUTO,
+      VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT,
+      {}};
+//  outBuffer = vlkn->getVma()->createBuffer(outAlloc, outAllocInfo,
+//                                           outBufferCreateInfo, outInfo);
+
+  vk::MemoryAllocateInfo allocInfo{size};
+  //outAddress = vlkn->getDevice().getBufferAddress(outBuffer, outAllocInfo);
+}
+  
 // namespace rn
 }
