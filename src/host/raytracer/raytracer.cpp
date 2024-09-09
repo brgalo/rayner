@@ -2,9 +2,6 @@
 #include "descriptors.hpp"
 #include "vknhandler.hpp"
 #include "vma.hpp"
-#include <vulkan/vulkan_enums.hpp>
-#include <vulkan/vulkan_handles.hpp>
-
 namespace rn {
 Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
                      GeometryHandler &geom)
@@ -13,6 +10,7 @@ Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
                  vlkn) {
   buildBlas(geom);
   buildTlas();
+  buildDescriptorSet();
 };
 
 
@@ -194,6 +192,23 @@ void Raytracer::buildTlas() {
 
   // destroy buffers
   vlkn->getVma()->destroyBuffer(scratchAlloc, scratch);
+}
+
+void Raytracer::buildDescriptorSet() {
+  vk::WriteDescriptorSetAccelerationStructureKHR
+      descriptorAccelerationStructure{tlas};
+  vk::WriteDescriptorSet tlasWrite{
+      set, 0, 0, 1, vk::DescriptorType::eAccelerationStructureKHR};
+  tlasWrite.pNext = &descriptorAccelerationStructure;
+
+  vk::DescriptorSetAllocateInfo allocInfo{pool,layout,
+  };
+
+  set = vlkn->getDevice().allocateDescriptorSets(allocInfo, set).front();
+
+
+  
+
 }
 
 

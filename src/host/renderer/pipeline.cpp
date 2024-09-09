@@ -165,10 +165,11 @@ RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
     memcpy(pData, getHandle(handleIdx++), handleSize);
     pData += missRegion.stride;
   }
-  vlkn->getVma().(sbtBuffer);
-  sbtBuffer->writeToBuffer(sbtDataHost.data());
-  sbtBuffer->unmap();
 
+  void *pMapped = nullptr;
+  vmaMapMemory(vlkn->getVma()->vma(), sbtAlloc, &pMapped);
+  memcpy(pMapped, pData, sbtSize);
+  vmaUnmapMemory(vlkn->getVma()->vma(), sbtAlloc);
 };
 
 

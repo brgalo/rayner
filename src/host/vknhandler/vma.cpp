@@ -3,7 +3,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan_handles.hpp>
 #define VMA_IMPLEMENTATION
 
 #include "vk_mem_alloc.h"

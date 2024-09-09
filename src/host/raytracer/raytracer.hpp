@@ -5,7 +5,6 @@
 #include "pipeline.hpp"
 #include "vk_mem_alloc.h"
 #include "vknhandler.hpp"
-#include <vulkan/vulkan_handles.hpp>
 
 namespace rn {
 class Raytracer {
@@ -18,8 +17,6 @@ private:
   void buildBlas(GeometryHandler &geom);
   void buildTlas();
   void buildDescriptorSet();
-  void createRtPipelineLayout();
-  void createRtPipeline();
 
   vk::AccelerationStructureKHR blas;
   vk::AccelerationStructureKHR tlas;
