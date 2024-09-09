@@ -95,9 +95,9 @@ void TraceDescriptors::writeSetup(vk::AccelerationStructureKHR &pTLAS) {
       descriptorAccelerationStructure{pTLAS};
   vk::WriteDescriptorSet tlasWrite{
   sets.front(), 0, 0, 1, vk::DescriptorType::eAccelerationStructureKHR};
-  write = tlasWrite;
   tlasWrite.pNext = &descriptorAccelerationStructure;
-
+  write = tlasWrite;
+  vlkn->getDevice().updateDescriptorSets(write, nullptr);
 }
 
 } // namespace rn
