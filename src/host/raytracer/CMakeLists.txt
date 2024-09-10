@@ -3,4 +3,5 @@ add_library(raytracer raytracer.hpp
 
 target_link_libraries(raytracer vknhandler
                                 Vulkan::Vulkan
-                                pipeline)
+                                pipeline
+                                vknhandler)

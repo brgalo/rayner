@@ -24,7 +24,7 @@ void main() {
     OutBuffer outbuf = OutBuffer(consts.outBufferAdress);
 
 	gl_PointSize = 10.0f;
-	gl_Position = ubo.projectionViewMatrix * (1.2* outbuf.outs[gl_VertexIndex]);
+	// gl_Position = ubo.projectionViewMatrix * (1.2* outbuf.outs[gl_VertexIndex]);
 
     fragColor = vec3(1,0,1);
 }

@@ -28,4 +28,6 @@ target_link_libraries(renderer PRIVATE Vulkan::Vulkan
                                        glfw
                                        pipeline
                                        gui
-                                       vknhandler)
+                                       vknhandler
+                                       PUBLIC GPUOpen::VulkanMemoryAllocator
+                                       )

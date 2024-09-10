@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 project("RAYNER")
 
 set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 
 add_definitions(-DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1)
@@ -59,7 +60,8 @@ add_subdirectory(src/host)
 
 add_executable(app main.cpp)
 
-target_link_libraries(app PRIVATE   rayner)
+target_link_libraries(app PRIVATE   rayner
+                          PUBLIC GPUOpen::VulkanMemoryAllocator)
 
 
 

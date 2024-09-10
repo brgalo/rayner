@@ -11,4 +11,5 @@ add_library(rayner rayner.hpp
                    target_link_libraries(rayner renderer
                                                 vknhandler
                                                 geometry
-                                                raytracer)
+                                                raytracer
+                                                VulkanMemoryAllocator)

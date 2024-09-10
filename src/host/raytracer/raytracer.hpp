@@ -1,9 +1,9 @@
 #pragma once
+#include <vulkan/vulkan.hpp>
 
 #include "descriptors.hpp"
 #include "geometryloader/geometry.hpp"
 #include "pipeline.hpp"
-#include "vk_mem_alloc.h"
 #include "vknhandler.hpp"
 #include <glm/fwd.hpp>
 
@@ -13,7 +13,7 @@ class Raytracer {
 public:
   Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom);
   ~Raytracer();
-  glm::uint64_t getOutBufferAdress() { return outAddress; };
+  vk::DeviceAddress getOutBufferAdress() { return rtPipeline.consts.out; };
 
 private:
   std::shared_ptr<VulkanHandler> vlkn;

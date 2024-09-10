@@ -1,6 +1,5 @@
 #include "descriptors.hpp"
 #include "swapchain.hpp"
-#include "vk_mem_alloc.h"
 #include "vma.hpp"
 
 // std

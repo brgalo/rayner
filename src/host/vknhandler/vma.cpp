@@ -3,9 +3,10 @@
 #include <cstring>
 #include <stdexcept>
 #include <vector>
-#define VMA_IMPLEMENTATION
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan_structs.hpp>
 
-#include "vk_mem_alloc.h"
+
 
 namespace rn {
 
@@ -18,6 +19,8 @@ VMA::VMA(VulkanHandler *vkn_, VmaVulkanFunctions fun) : dev(vkn_->getDevice()) ,
   vmaCreateAllocator(&info, &vma_);
 };
 
+VMA::~VMA() { vmaDestroyAllocator(vma_); }
+
 vk::Image VMA::creatDepthImage(VmaAllocation &alloc, VmaAllocationInfo &allocInfo, vk::ImageCreateInfo dImgInfo) {
   VmaAllocationCreateInfo info{.flags =
                                    VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
@@ -28,9 +31,9 @@ vk::Image VMA::creatDepthImage(VmaAllocation &alloc, VmaAllocationInfo &allocInf
 
 vk::Image VMA::createImage(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
                            vk::ImageCreateInfo createInfo, VmaAllocationCreateInfo & allocCreateInfo) {
-  VkImageCreateInfo temp(createInfo);
-  VkImage imgTemp;
-  auto res = vmaCreateImage(vma_, &temp, &allocCreateInfo, &imgTemp, &alloc,
+  const VkImageCreateInfo* temp = reinterpret_cast<const VkImageCreateInfo*>(&createInfo);
+  VkImage imgTemp{};
+  auto res = vmaCreateImage(vma_, temp, &allocCreateInfo, &imgTemp, &alloc,
                             &allocInfo);
   if (res != VK_SUCCESS) {
     throw std::runtime_error("failed to create Image!");
@@ -55,10 +58,11 @@ void VMA::copyBuffer(vk::BufferCopy bufferCopy, vk::Buffer src, vk::Buffer dst) 
 }
 
 vk::Buffer VMA::createBuffer(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
-                             VkBufferCreateInfo &createInfo,
+                             vk::BufferCreateInfo &createInfo,
                              VmaAllocationCreateInfo &allocCreateInfo) {
   VkBuffer temp;
-  vmaCreateBuffer(vma_, &createInfo, &allocCreateInfo, &temp, &alloc, &allocInfo);
+  const VkBufferCreateInfo* tempBuf = reinterpret_cast<const VkBufferCreateInfo*>(&createInfo);
+  vmaCreateBuffer(vma_, tempBuf, &allocCreateInfo, &temp, &alloc, &allocInfo);
   return temp;
 }
 

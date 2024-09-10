@@ -1,7 +1,6 @@
 #include "pipeline.hpp"
 #include "descriptors.hpp"
 #include "geometryloader/geometry.hpp"
-#include "vk_mem_alloc.h"
 #include "vknhandler.hpp"
 #include <array>
 #include <cstdint>
@@ -11,7 +10,10 @@
 #include <vector>
 #include "vma.hpp"
 #include <fstream>
-#include <vulkan/vulkan_structs.hpp>
+
+
+#include "vk_mem_alloc.h"
+
 
 namespace rn {
 

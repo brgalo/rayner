@@ -39,7 +39,10 @@ void Renderer::updateCamera(float frameTime) {
   camera.updateView(frameTime);
 }
 
-void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx, uint64_t outBufferAdress) {
+void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
+                      size_t nIdx, vk::DeviceAddress outBufferAdress) {
+    vlkn->getDevice().waitIdle();
+
   auto idx =
       swapChain.aquireNextImage(swapChain.inFlightFences.at(syncIdx),
                                 swapChain.imageAvailableSemaphores.at(syncIdx));

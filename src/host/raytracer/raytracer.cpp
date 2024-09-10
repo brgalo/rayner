@@ -236,11 +236,11 @@ void Raytracer::createOutputBuffer() {
       VMA_MEMORY_USAGE_AUTO,
       VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT,
       {}};
-//  outBuffer = vlkn->getVma()->createBuffer(outAlloc, outAllocInfo,
-//                                           outBufferCreateInfo, outInfo);
+  outBuffer = vlkn->getVma()->createBuffer(outAlloc, outAllocInfo,
+                                           outBufferCreateInfo, outInfo);
 
   vk::MemoryAllocateInfo allocInfo{size};
-  //outAddress = vlkn->getDevice().getBufferAddress(outBuffer, outAllocInfo);
+  outAddress = vlkn->getVma()->getDeviceAddress(outBuffer);
 }
   
 // namespace rn

@@ -5,24 +5,21 @@
 
 #include "glm/glm.hpp"
 
-#ifndef VMA_H
-#define VMA_H
 #include "vk_mem_alloc.h"
-#endif
 
 namespace rn {
 class VMA {
 public:
   VMA(VulkanHandler *vkn_, VmaVulkanFunctions fun);
-  ~VMA() { vmaDestroyAllocator(vma_); }
+  ~VMA();
   vk::Image creatDepthImage(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
                             vk::ImageCreateInfo dImgInfo);
-  void destroyImage(VkImage img, VmaAllocation alloc) {
+  void destroyImage(vk::Image img, VmaAllocation alloc) {
     vmaDestroyImage(vma_, img, alloc);
   };
 
   vk::Buffer createBuffer(VmaAllocation &alloc, VmaAllocationInfo &allocInfo,
-                          VkBufferCreateInfo &createInfo,
+                          vk::BufferCreateInfo &createInfo,
                           VmaAllocationCreateInfo &allocCreateInfo);
   void destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer) const;
   //vk::Buffer a;
