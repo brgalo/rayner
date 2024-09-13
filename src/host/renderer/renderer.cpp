@@ -1,5 +1,6 @@
 #include "renderer.hpp"
 #include "descriptors.hpp"
+#include "pipeline.hpp"
 #include "swapchain.hpp"
 #include "window.hpp"
 #include <array>
@@ -40,7 +41,7 @@ void Renderer::updateCamera(float frameTime) {
 }
 
 void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
-                      size_t nIdx, vk::DeviceAddress outBufferAdress) {
+                      size_t nIdx, RaytracingPipeline::RtConsts &RtConsts) {
     vlkn->getDevice().waitIdle();
 
   auto idx =
@@ -63,6 +64,7 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
                                     {vk::Offset2D{0, 0}, swapChain.getExtent()},
                                     clearVals};
   buffer.beginRenderPass(beginInfo, vk::SubpassContents::eInline);
+  /*
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineTri.get());
   buffer.pushConstants(pipelineTri.getLayout(),
                        vk::ShaderStageFlagBits::eVertex |
@@ -73,10 +75,11 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
                             descriptors.getSets().at(syncIdx), nullptr);
   buffer.bindVertexBuffers(0, vertexBuffer, {0});
   buffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
+*/
   buffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(swapChain.getExtent().width),
                                      static_cast<float>(swapChain.getExtent().height), 0.0f, 1.0f));
   buffer.setScissor(0, vk::Rect2D(vk::Offset2D{0, 0}, swapChain.getExtent()));
-  buffer.drawIndexed(nIdx, 1, 0, 0, 0);
+  /*buffer.drawIndexed(nIdx, 1, 0, 0, 0);
 
   // render lines
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineLin.get());
@@ -90,18 +93,18 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
                             descriptors.getSets().at(syncIdx), nullptr);
   buffer.bindVertexBuffers(0, vertexBuffer, {0});
   buffer.draw(4, 1, 0, 0);
-
+*/
   // render points
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinePts.get());
   buffer.pushConstants(pipelinePts.getLayout(),
                        vk::ShaderStageFlagBits::eVertex |
                            vk::ShaderStageFlagBits::eFragment,
-                       0, sizeof(uint64_t), &outBufferAdress);
+                       0, sizeof(RtConsts), &RtConsts);
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                             pipelinePts.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
   buffer.bindVertexBuffers(0, vertexBuffer, {0});
-  buffer.draw(4, 1, 0, 0);
+  buffer.draw(10, 1, 0, 0);
   
   buffer.endRenderPass();
   gui->render(buffer, idx.value(), swapChain.getExtent());

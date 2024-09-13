@@ -23,7 +23,7 @@ public:
                           VmaAllocationCreateInfo &allocCreateInfo);
   void destroyBuffer(VmaAllocation &alloc, vk::Buffer &buffer) const;
   //vk::Buffer a;
-
+  std::vector<glm::vec4> getOutData(VmaAllocation &alloc, size_t size);
   vk::Buffer uploadGeometry(const void *pData, vk::DeviceSize size,
                             VmaAllocation &alloc);
   vk::Buffer uploadVertices(const std::vector<glm::vec3> &verts,

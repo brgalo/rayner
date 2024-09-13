@@ -1,5 +1,6 @@
 #version 460
-
+#extension GL_EXT_debug_printf : enable
+#extension GL_GOOGLE_include_directive : require
 #include "commonrt.glsl"
 
 struct pushConsts {
@@ -19,7 +20,7 @@ layout(set = 0, binding = 0) uniform accelerationStructureEXT scene;
 void main() {
     OutBuffer outbuf = OutBuffer(consts.outBufferAdress);
 
-
-    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, vec3(0,0,0),0,vec3(1,0,0),1000,0);
-    outbuf.outs[gl_LaunchIDEXT.x] = vec4(gl_LaunchIDEXT.x,1,0,1);
+//    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, vec3(0,0,0),0,vec3(1,0,0),1000,0);
+    debugPrintfEXT("My float is %d", gl_LaunchIDEXT.x);   
+    outbuf.outs[gl_LaunchIDEXT.x] = vec4(gl_LaunchIDEXT.x-1,1,0,1);
 }

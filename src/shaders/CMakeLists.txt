@@ -20,7 +20,7 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
     add_custom_command(
         OUTPUT ${SPIRV}
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/spv"
-        COMMAND glslc ${GLSL} -o ${SPIRV} --target-env=vulkan1.2
+        COMMAND glslangValidator --target-env vulkan1.2 -e main -o ${SPIRV} ${GLSL}
         DEPENDS ${GLSL}
     )
     list(APPEND SPIRV_BINARY_FILES ${SPIRV})

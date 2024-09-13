@@ -6,6 +6,7 @@
 #include "pipeline.hpp"
 #include "vknhandler.hpp"
 #include <glm/fwd.hpp>
+#include <vulkan/vulkan_handles.hpp>
 
 
 namespace rn {
@@ -13,14 +14,14 @@ class Raytracer {
 public:
   Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom);
   ~Raytracer();
-  vk::DeviceAddress getOutBufferAdress() { return rtPipeline.consts.out; };
+  RaytracingPipeline::RtConsts &getRtConsts() { return rtPipeline.consts; };
+  void trace();
 
 private:
   std::shared_ptr<VulkanHandler> vlkn;
   void buildBlas(GeometryHandler &geom);
   void buildTlas();
   void buildDescriptorSet();
-  void trace();
   void updatePushConstants(GeometryHandler &geom);
   void createOutputBuffer();
 
@@ -35,14 +36,16 @@ private:
 
   vk::Buffer outBuffer;
   VmaAllocation outAlloc;
+  VmaAllocationInfo outAllocInfo;
   std::vector<glm::vec4> outData{1000};
-  vk::DeviceAddress outAddress;
 
   vk::AccelerationStructureInstanceKHR instance;
   TraceDescriptors descriptor;
   vk::DescriptorSetLayout layout;
   vk::DescriptorPool pool;
   vk::DescriptorSet set;
+
+  vk::Fence fence;
 
   RaytracingPipeline rtPipeline;
 };

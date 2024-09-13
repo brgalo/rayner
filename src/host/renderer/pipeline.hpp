@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan_handles.hpp>
 
 
 namespace rn {
@@ -122,9 +123,15 @@ public:
                      std::shared_ptr<VulkanHandler> vulkn_);
   ~RaytracingPipeline();
   
-  VkStridedDeviceAddressRegionKHR rgenRegion{};
-  VkStridedDeviceAddressRegionKHR hitRegion{};
-  VkStridedDeviceAddressRegionKHR missRegion{};
+  vk::StridedDeviceAddressRegionKHR rgenRegion{};
+  vk::StridedDeviceAddressRegionKHR hitRegion{};
+  vk::StridedDeviceAddressRegionKHR missRegion{};
+
+  vk::ShaderModule cHit = createModule("spv/rt.rchit.spv");
+  vk::ShaderModule rGen = createModule("spv/rt.rgen.spv");
+  vk::ShaderModule rMiss = createModule("spv/rt.rmiss.spv");
+
+
 
   struct RtConsts {
  //   vk::DeviceAddress verts;

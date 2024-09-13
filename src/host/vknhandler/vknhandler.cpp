@@ -101,7 +101,8 @@ void VulkanHandler::createDebugCallback() {
       vk::DebugUtilsMessengerCreateInfoEXT(
           {},
           vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
-              vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
+              vk::DebugUtilsMessageSeverityFlagBitsEXT::eError |
+              vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo,
           vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
               vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
               vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,

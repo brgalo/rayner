@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstring>
 #include <stdexcept>
+#include <sys/types.h>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_structs.hpp>
@@ -151,5 +152,12 @@ vk::Buffer VMA::stagingBuffer(vk::DeviceSize size, VmaAllocation &alloc, VmaAllo
   VkBuffer buf;
   vmaCreateBuffer(vma_, &rawInfo, &createInfo, &buf, &alloc, &info);
   return buf;
+}
+
+std::vector<glm::vec4> VMA::getOutData(VmaAllocation &alloc, size_t size) {
+  std::vector<glm::vec4> outData(size);
+  void* pData = outData.data();
+  vmaMapMemory(vma_, alloc, &pData);
+  return outData;
 }
 } // namespace rn

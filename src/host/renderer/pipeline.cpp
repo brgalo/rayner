@@ -3,6 +3,7 @@
 #include "geometryloader/geometry.hpp"
 #include "vknhandler.hpp"
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
@@ -54,6 +55,9 @@ GraphicsPipelinePoints::GraphicsPipelinePoints(
 
 RaytracingPipeline::~RaytracingPipeline() {
   vlkn->getVma()->destroyBuffer(sbtAlloc, sbtBuffer);
+      destroyModule(cHit);
+      destroyModule(rGen);
+      destroyModule(rMiss);
 }
 
 
@@ -62,10 +66,6 @@ RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
                                        std::shared_ptr<VulkanHandler> vulkn_)
     : Pipeline(set_, bindP, vulkn_) {
       RaytracingPipeline::createLayout();
-
-      vk::ShaderModule cHit = createModule("spv/rt.rchit.spv");
-      vk::ShaderModule rGen = createModule("spv/rt.rgen.spv");
-      vk::ShaderModule rMiss = createModule("spv/rt.rmiss.spv");
 
       std::array<vk::PipelineShaderStageCreateInfo, 3> shaderStages{
           {{{}, vk::ShaderStageFlagBits::eRaygenKHR, rGen, "main"},
@@ -86,9 +86,6 @@ RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
                       .createRayTracingPipelinesKHR(VK_NULL_HANDLE,
                                                     VK_NULL_HANDLE, rtpci)
                       .value.front();
-      destroyModule(cHit);
-      destroyModule(rGen);
-      destroyModule(rMiss);
 
       uint32_t missCount = 1;
       uint32_t hitCount = 1;
@@ -102,26 +99,27 @@ RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
       uint32_t handleCount = static_cast<uint32_t>(rtsgci.size());
       uint32_t handleSize = props.shaderGroupHandleSize;
       uint32_t handleSizeAligned =
-          alignUp(handleSize, props.shaderGroupBaseAlignment);
+          alignUp(handleSize, props.shaderGroupHandleAlignment);
       rgenRegion.stride =
           alignUp(handleSizeAligned, props.shaderGroupBaseAlignment);
       rgenRegion.size = rgenRegion.stride;
 
-      missRegion.stride = handleSizeAligned;
-      missRegion.size = alignUp(missCount * handleSizeAligned,
-                                props.shaderGroupBaseAlignment);
       hitRegion.stride = handleSizeAligned;
       hitRegion.size =
           alignUp(hitCount * handleSizeAligned, props.shaderGroupBaseAlignment);
+      
+      missRegion.stride = handleSizeAligned;
+      missRegion.size = alignUp(missCount * handleSizeAligned,
+                                props.shaderGroupBaseAlignment);
+
 
       uint32_t dataSize = handleCount * handleSize;
       handles.resize(dataSize);
-
       if (vulkn_->getDevice().getRayTracingShaderGroupHandlesKHR(
-              pipeline_, 0, handleCount, dataSize, handles.data()) !=
-          vk::Result::eSuccess) {
+              pipeline_, 0, handleCount,dataSize,handles.data()) != vk::Result::eSuccess) {
         throw std::runtime_error("failed to retrieve shader group handles!");
       }
+
       vk::DeviceSize sbtSize =
           rgenRegion.size + missRegion.size + hitRegion.size;
       vk::BufferCreateInfo sbtBufferInfo{
@@ -131,9 +129,8 @@ RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
               vk::BufferUsageFlagBits::eShaderDeviceAddress |
               vk::BufferUsageFlagBits::eShaderBindingTableKHR};
       VmaAllocationCreateInfo sbtAllocCreateInfo{
-          VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
-              VMA_ALLOCATION_CREATE_MAPPED_BIT,
-          VMA_MEMORY_USAGE_GPU_ONLY,
+          VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+          VMA_MEMORY_USAGE_AUTO,
           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
               VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
@@ -145,7 +142,7 @@ RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
       vk::DeviceAddress sbtAdress =
           vulkn_->getDevice().getBufferAddress(sbtBuffer);
       rgenRegion.deviceAddress = sbtAdress;
-      hitRegion.deviceAddress = sbtAdress + rgenRegion.size;
+      hitRegion.deviceAddress  = sbtAdress + rgenRegion.size;
       missRegion.deviceAddress = sbtAdress + rgenRegion.size + hitRegion.size;
 
       std::vector<uint8_t> sbtDataHost(sbtSize);
@@ -171,7 +168,7 @@ RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
 
   void *pMapped = nullptr;
   vmaMapMemory(vlkn->getVma()->vma(), sbtAlloc, &pMapped);
-  memcpy(pMapped, pData, sbtSize);
+  memcpy(pMapped, sbtDataHost.data(), sbtSize);
   vmaUnmapMemory(vlkn->getVma()->vma(), sbtAlloc);
 };
 
