@@ -226,7 +226,7 @@ void Raytracer::trace() {
                             rtPipeline.getLayout(), 0, 1,
                             &descriptor.getSets().front(), 0, nullptr);
   buffer.traceRaysKHR(rtPipeline.rgenRegion, rtPipeline.missRegion,
-                      rtPipeline.hitRegion, {}, 8, 1, 1);
+                      rtPipeline.hitRegion, {}, 100, 1, 1);
 
   vlkn->endSingleTimeCommands(buffer);
   

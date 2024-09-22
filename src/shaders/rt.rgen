@@ -2,6 +2,7 @@
 #extension GL_EXT_debug_printf : enable
 #extension GL_GOOGLE_include_directive : require
 #include "commonrt.glsl"
+#include "random.glsl"
 
 struct pushConsts {
     uint64_t vertsBufferAdress;
@@ -21,12 +22,17 @@ layout(location = 0) rayPayloadEXT RayPayload payload;
 layout(set = 0, binding = 0) uniform accelerationStructureEXT scene;
 
 void main() {
+    uint seed = tea(gl_LaunchIDEXT.x, 0);
+
     OutBuffer outbuf = OutBuffer(consts.outBufferAdress);
     VertBuffer vertbuf = VertBuffer(consts.vertsBufferAdress);
-    vec4 A,B,temp;
+    vec4 A,B,C,temp;
+    float sr1 = sqrt(rnd(seed));
+    float r2 = rnd(seed);
     A = vertbuf.verts[0];
     B = vertbuf.verts[1];
-    temp = A*(1-0.1*gl_LaunchIDEXT.x) + B*0.1*gl_LaunchIDEXT.x;
+    C = vertbuf.verts[2];
+    temp = A*(1-sr1) + B*sr1*(1-r2) + C*sr1*r2;
 //    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, vec3(0,0,0),0,vec3(1,0,0),1000,0);
     outbuf.outs[gl_LaunchIDEXT.x] = temp;
 }

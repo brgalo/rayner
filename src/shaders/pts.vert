@@ -27,23 +27,23 @@ void main() {
 	gl_PointSize = 10.0f;
 	gl_Position = (ubo.projectionViewMatrix * outbuf.outs[gl_VertexIndex]);
 
-    if(gl_VertexIndex ==0) {
+    if(gl_VertexIndex%8 ==0) {
 //    gl_Position = ubo.projectionViewMatrix * vec4(0,0,0,1);
     fragColor = vec3(1,0,0);        
-    } else if (gl_VertexIndex ==1) {
+    } else if (gl_VertexIndex%8 ==1) {
 //    gl_Position = ubo.projectionViewMatrix *  vec4(1,0,1,1);
     fragColor = vec3(0,1,0);
-    } else if (gl_VertexIndex ==2) {
+    } else if (gl_VertexIndex%8 ==2) {
     fragColor = vec3(0,0,1);
-    } else if (gl_VertexIndex ==3) {
+    } else if (gl_VertexIndex%8 ==3) {
     fragColor = vec3(1,1,0);
-    } else if (gl_VertexIndex ==4) {
+    } else if (gl_VertexIndex%8 ==4) {
     fragColor = vec3(0,1,1);
-    } else if (gl_VertexIndex ==5) {
+    } else if (gl_VertexIndex%8 ==5) {
     fragColor = vec3(1,0,1);
-    } else if (gl_VertexIndex ==6) {
+    } else if (gl_VertexIndex%8 ==6) {
     fragColor = vec3(1,1,1);
-    } else if (gl_VertexIndex ==7) {
+    } else if (gl_VertexIndex%8 ==7) {
     fragColor = vec3(0.5,0.5,0.5);
     }
 //    gl_Position = ubo.projectionViewMatrix * temp;
