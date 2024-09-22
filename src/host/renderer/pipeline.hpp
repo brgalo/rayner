@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <vulkan/vulkan_handles.hpp>
+#include <vulkan/vulkan_structs.hpp>
 
 
 namespace rn {
@@ -75,7 +76,8 @@ public:
 protected:
   vk::RenderPass renderPass;
   virtual void config() override;
-  void init(const std::string &vertPath,const std::string &fragPath);
+  void init(const std::string &vertPath, const std::string &fragPath,
+            vk::PipelineVertexInputStateCreateInfo const &vertexInfo);
   virtual void createLayout() override;
   void create(vk::GraphicsPipelineCreateInfo &info);
 };
@@ -134,8 +136,8 @@ public:
 
 
   struct RtConsts {
- //   vk::DeviceAddress verts;
- //   vk::DeviceAddress idx;
+    vk::DeviceAddress verts;
+    vk::DeviceAddress idx;
     vk::DeviceAddress out;
   } consts;
 

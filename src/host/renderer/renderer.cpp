@@ -103,8 +103,8 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                             pipelinePts.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
-  buffer.bindVertexBuffers(0, vertexBuffer, {0});
-  buffer.draw(10, 1, 0, 0);
+//  buffer.bindVertexBuffers(0, vertexBuffer, {0});
+  buffer.draw(8, 1, 0, 0);
   
   buffer.endRenderPass();
   gui->render(buffer, idx.value(), swapChain.getExtent());

@@ -45,7 +45,7 @@ private:
   const vk::Queue transferQ;
   const vk::CommandPool transferPool;
 
-  vk::Buffer uploadWithStaging(const void *pData, size_t site,
+  vk::Buffer uploadWithStaging(const void *pData, size_t size,
                                VmaAllocation &alloc,
                                vk::BufferUsageFlags usageFlags,
                                VmaAllocationCreateInfo allocCreateInfo);

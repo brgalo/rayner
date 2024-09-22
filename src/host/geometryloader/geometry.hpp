@@ -19,7 +19,6 @@ public:
   GeometryHandler(std::shared_ptr<VMA> vma_);
   ~GeometryHandler();
   vk::CommandBuffer bindVertexBuffer(vk::CommandBuffer commandBuffer);
-  void uploadVertexData();
   static std::vector<vk::VertexInputBindingDescription> getInputDescription();
   static std::vector<vk::VertexInputAttributeDescription>
   getAttributeDescription();

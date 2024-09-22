@@ -4,6 +4,8 @@
 #include "commonrt.glsl"
 
 struct pushConsts {
+    uint64_t vertsBufferAdress;
+    uint64_t idxBufferAdress;
     uint64_t outBufferAdress;
 };
 
@@ -11,6 +13,7 @@ layout(push_constant) uniform _pushConsts { pushConsts consts;};
 
 
 layout(buffer_reference, scalar) buffer OutBuffer{vec4 outs[];};
+layout(buffer_reference, scalar) buffer VertBuffer{vec4 verts[];};
 
 
 layout(location = 0) rayPayloadEXT RayPayload payload;
@@ -19,8 +22,11 @@ layout(set = 0, binding = 0) uniform accelerationStructureEXT scene;
 
 void main() {
     OutBuffer outbuf = OutBuffer(consts.outBufferAdress);
-
+    VertBuffer vertbuf = VertBuffer(consts.vertsBufferAdress);
+    vec4 A,B,temp;
+    A = vertbuf.verts[0];
+    B = vertbuf.verts[1];
+    temp = A*(1-0.1*gl_LaunchIDEXT.x) + B*0.1*gl_LaunchIDEXT.x;
 //    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, vec3(0,0,0),0,vec3(1,0,0),1000,0);
-    debugPrintfEXT("My float is %d", gl_LaunchIDEXT.x);   
-    outbuf.outs[gl_LaunchIDEXT.x] = vec4(gl_LaunchIDEXT.x-1,1,0,1);
+    outbuf.outs[gl_LaunchIDEXT.x] = temp;
 }

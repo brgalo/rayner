@@ -78,7 +78,7 @@ void VulkanHandler::createInstance() {
 
   // gather all Layers & extensions
   auto instanceLayerProps = vk::enumerateInstanceLayerProperties();
-  std::vector<char const *> instanceLayerNames({"VK_LAYER_KHRONOS_validation"});
+  std::vector<char const *> instanceLayerNames;//({"VK_LAYER_KHRONOS_validation"});
   std::vector<char const *> enabledLayers =
       getLayers(instanceLayerNames, instanceLayerProps);
 

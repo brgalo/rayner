@@ -11,6 +11,9 @@
 #include <vector>
 #include "vma.hpp"
 #include <fstream>
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan_enums.hpp>
+#include <vulkan/vulkan_structs.hpp>
 
 
 #include "vk_mem_alloc.h"
@@ -33,24 +36,35 @@ GraphicsPipelineTriangles::GraphicsPipelineTriangles(DescriptorSet &set_,
                             vk::RenderPass renderPass_,
                             std::shared_ptr<VulkanHandler> vlkn)
       : GraphicsPipeline(set_, renderPass_, vlkn) {
-        GraphicsPipelineTriangles::config();
-        init("spv/tri.vert.spv", "spv/tri.frag.spv");
+  GraphicsPipelineTriangles::config();
+  auto inputDescription = GeometryHandler::getInputDescription().front();
+  auto attributeDescription = GeometryHandler::getAttributeDescription().front();
+
+  vk::PipelineVertexInputStateCreateInfo createInfo{
+      {}, inputDescription, attributeDescription};
+  init("spv/tri.vert.spv", "spv/tri.frag.spv", createInfo);
 };
 
 GraphicsPipelineLines::GraphicsPipelineLines(
     DescriptorSet &set_, vk::RenderPass renderPass_,
     std::shared_ptr<VulkanHandler> vlkn)
     : GraphicsPipeline(set_, renderPass_, vlkn) {
-        GraphicsPipelineLines::config();
-        init("spv/lin.vert.spv","spv/lin.frag.spv");
+  GraphicsPipelineLines::config();
+  auto inputDescription = GeometryHandler::getInputDescription().front();
+  auto attributeDescription = GeometryHandler::getAttributeDescription().front();
+
+  vk::PipelineVertexInputStateCreateInfo createInfo{
+      {}, inputDescription, attributeDescription};
+  init("spv/lin.vert.spv", "spv/lin.frag.spv", createInfo);
 };
 
 GraphicsPipelinePoints::GraphicsPipelinePoints(
     DescriptorSet &set_, vk::RenderPass renderPass_,
     std::shared_ptr<VulkanHandler> vlkn)
     : GraphicsPipeline(set_, renderPass_, vlkn) {
-        GraphicsPipelinePoints::config();
-        init("spv/pts.vert.spv", "spv/pts.frag.spv");
+  GraphicsPipelinePoints::config();
+  vk::PipelineVertexInputStateCreateInfo createInfo{{}, 0, nullptr, 0, nullptr};
+  init("spv/pts.vert.spv", "spv/pts.frag.spv", createInfo);
 };
 
 RaytracingPipeline::~RaytracingPipeline() {
@@ -254,7 +268,7 @@ void GraphicsPipelineLines::config() {
 void GraphicsPipelinePoints::config() {
    // change primitive type!
    configInfo.inputAssemblyInfo.setTopology(vk::PrimitiveTopology::ePointList);
-}
+   }
 
 void GraphicsPipeline::create(vk::GraphicsPipelineCreateInfo &info) {
   auto res = vlkn->getDevice().createGraphicsPipeline(nullptr, info);
@@ -271,8 +285,9 @@ void RaytracingPipeline::createLayout() {
   layout_ = vlkn->getDevice().createPipelineLayout(layoutInfo);
 };
 
-void GraphicsPipeline::init(const std::string &vertPath,
-                            const std::string &fragPath) {
+void GraphicsPipeline::init(
+    const std::string &vertPath, const std::string &fragPath,
+    vk::PipelineVertexInputStateCreateInfo const &vertexInfo) {
   createLayout();
 
   // shader modules
@@ -282,9 +297,6 @@ void GraphicsPipeline::init(const std::string &vertPath,
   std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages{
       {{{}, vk::ShaderStageFlagBits::eVertex, vert, "main"},
        {{}, vk::ShaderStageFlagBits::eFragment, frag, "main"}}};
-  auto inputDesc = GeometryHandler::getInputDescription();
-  auto inputAttr = GeometryHandler::getAttributeDescription();
-  vk::PipelineVertexInputStateCreateInfo vertexInfo{{}, inputDesc, inputAttr};
 
   vk::GraphicsPipelineCreateInfo createInfo{{},
                                             shaderStages,
@@ -330,7 +342,7 @@ std::vector<char> Pipeline::readFile(const std::string &filepath) {
 void GraphicsPipelinePoints::createLayout() {
   vk::PushConstantRange constRange{vk::ShaderStageFlagBits::eVertex |
                             vk::ShaderStageFlagBits::eFragment,
-                        0, sizeof(uint64_t)};
+                        0, sizeof(RaytracingPipeline::RtConsts)};
   Pipeline::createLayout(constRange);
 };
 

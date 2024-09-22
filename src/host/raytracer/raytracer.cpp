@@ -3,6 +3,7 @@
 #include "pipeline.hpp"
 #include "vknhandler.hpp"
 #include "vma.hpp"
+#include <cstdint>
 #include <iostream>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_enums.hpp>
@@ -43,10 +44,10 @@ Raytracer::~Raytracer() {
 
 void Raytracer::buildBlas(GeometryHandler &geom) {
   vk::AccelerationStructureGeometryTrianglesDataKHR triangles{
-      vk::Format::eR32G32B32Sfloat,
-      vlkn->getVma()->getDeviceAddress(geom.getVert()),
-      static_cast<uint32_t>(sizeof(glm::vec3)),
-      2,
+    vk::Format::eR32G32B32A32Sfloat,
+        vlkn->getVma()->getDeviceAddress(geom.getVert()),
+        static_cast<uint32_t>(sizeof(glm::vec3)),
+        static_cast<uint32_t>(geom.indices.size()),
       vk::IndexType::eUint32,
       vlkn->getVma()->getDeviceAddress(geom.getIdx()),
       {}};
@@ -225,7 +226,7 @@ void Raytracer::trace() {
                             rtPipeline.getLayout(), 0, 1,
                             &descriptor.getSets().front(), 0, nullptr);
   buffer.traceRaysKHR(rtPipeline.rgenRegion, rtPipeline.missRegion,
-                      rtPipeline.hitRegion, {}, 4, 1, 1);
+                      rtPipeline.hitRegion, {}, 8, 1, 1);
 
   vlkn->endSingleTimeCommands(buffer);
   
@@ -257,8 +258,8 @@ void Raytracer::trace() {
 }
 
 void Raytracer::updatePushConstants(GeometryHandler &geom) {
-//  rtPipeline.consts.verts = vlkn->getVma()->getDeviceAddress(geom.getVert());
-//  rtPipeline.consts.idx = vlkn->getVma()->getDeviceAddress(geom.getIdx());
+  rtPipeline.consts.verts = vlkn->getVma()->getDeviceAddress(geom.getVert());
+  rtPipeline.consts.idx = vlkn->getVma()->getDeviceAddress(geom.getIdx());
   rtPipeline.consts.out = vlkn->getVma()->getDeviceAddress(outBuffer);
 }
 

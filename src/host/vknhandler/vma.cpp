@@ -80,8 +80,14 @@ vk::Buffer VMA::uploadGeometry(const void *pData, vk::DeviceSize size, VmaAlloca
 
 vk::Buffer VMA::uploadVertices(const std::vector<glm::vec3> &verts,
                                VmaAllocation &alloc) {
+  std::vector<glm::vec4> vertsTemp;
+  vertsTemp.reserve(verts.size());
+  for (auto &v : verts) {
+    vertsTemp.push_back(glm::vec4(v, 1.f));
+  }
+
   return uploadWithStaging(
-      verts.data(), sizeof(verts[0]) * verts.size(), alloc,
+      vertsTemp.data(), sizeof(vertsTemp[0]) * vertsTemp.size(), alloc,
       vk::BufferUsageFlagBits::eVertexBuffer |
           vk::BufferUsageFlagBits::eShaderDeviceAddress |
           vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,

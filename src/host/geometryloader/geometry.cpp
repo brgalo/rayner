@@ -34,7 +34,7 @@ template <> struct hash<glm::vec3> {
 namespace rn {
 
 GeometryHandler::GeometryHandler(std::shared_ptr<VMA> vma_) : vma(vma_) {
-  loadObj("geom/plane.obj");
+  loadObj("geom/colored_cube.obj");
   vertex = vma->uploadVertices(vertices, vertexAlloc);
   index = vma->uploadIndices(indices, indexAlloc);
 }
@@ -46,18 +46,13 @@ GeometryHandler::~GeometryHandler() {
 
 std::vector<vk::VertexInputAttributeDescription> GeometryHandler::getAttributeDescription() {
   std::vector<vk::VertexInputAttributeDescription> attr{};
-  attr.push_back({0, 0, vk::Format::eR32G32B32Sfloat, 0});
+  attr.push_back({0, 0, vk::Format::eR32G32B32A32Sfloat, 0});
   return attr;
 }
 
 std::vector<vk::VertexInputBindingDescription>
 GeometryHandler::getInputDescription() {
   return {{0, sizeof(glm::vec3), vk::VertexInputRate::eVertex}};
-}
-
-void GeometryHandler::uploadVertexData() {
-  vertex = vma->uploadGeometry(reinterpret_cast<const void *>(&coloredCubeData),
-                      sizeof(VertexPC)*36, vertexAlloc);
 }
 
 void GeometryHandler::loadObj(const std::string &filePath) {

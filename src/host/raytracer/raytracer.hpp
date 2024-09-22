@@ -37,7 +37,7 @@ private:
   vk::Buffer outBuffer;
   VmaAllocation outAlloc;
   VmaAllocationInfo outAllocInfo;
-  std::vector<glm::vec4> outData{1000};
+  std::vector<glm::vec4> outData{10};
 
   vk::AccelerationStructureInstanceKHR instance;
   TraceDescriptors descriptor;
