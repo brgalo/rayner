@@ -6,6 +6,7 @@
 #include "window.hpp"
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "state.hpp"
@@ -14,11 +15,13 @@ namespace rn {
 
 class Gui {
 public:
-  Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain);
+  Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain, std::shared_ptr<std::vector<std::string>> triangleNames);
   ~Gui();
   void recreateFramebuffers(const SwapChain &swapchain);
   void render(vk::CommandBuffer &buffer, uint32_t idx, vk::Extent2D extent);
   std::shared_ptr<State> state = std::make_shared<State>();
+  std::shared_ptr<std::vector<std::string>> triangleNames;
+
 private:
   VulkanHandler &vlkn;
   Window &window;
@@ -32,7 +35,6 @@ private:
   vk::DescriptorPool pool;
   std::vector<vk::Framebuffer> framebuffers;
   vk::RenderPass renderPass;
-
 
   void oriMenu();
 

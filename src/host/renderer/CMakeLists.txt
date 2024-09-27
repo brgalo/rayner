@@ -19,6 +19,8 @@ add_library(colormaps colormaps.cpp
 
 add_library(gui      gui.cpp
                      gui.hpp
+                     state.hpp
+                     state.cpp
                      ${IMGUI_INCLUDES}
                      ${IMPLOT_INCLUDES}
                      )

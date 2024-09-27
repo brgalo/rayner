@@ -1,5 +1,6 @@
 #pragma once
 #include "descriptors.hpp"
+#include "geometryloader/geometry.hpp"
 #include "imgui.h"
 #include <cstddef>
 #include <glm/fwd.hpp>
@@ -25,9 +26,11 @@ struct Consts {
 
 class Renderer {
 public:
-  Renderer(std::shared_ptr<VulkanHandler> vlkn_) : vlkn(vlkn_), descriptors(vlkn_){
+  Renderer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom_) : vlkn(vlkn_), descriptors(vlkn_) {
     consts.mat = glm::mat4{1.0f};
     createCommandBuffers();
+    gui = std::make_shared<Gui>(*vlkn, window, swapChain, geom_.triangleNames);
+
     swapChain.setGui(gui);
   };
 
@@ -49,8 +52,8 @@ private:
       GraphicsPipelineLines(descriptors, swapChain.getRenderPass(), vlkn);
   GraphicsPipelinePoints pipelinePts =
       GraphicsPipelinePoints(descriptors, swapChain.getRenderPass(), vlkn);
-  
-  std::shared_ptr<Gui> gui = std::make_shared<Gui>(*vlkn, window, swapChain);
+
+  std::shared_ptr<Gui> gui = nullptr;
 
   Consts consts{};
   Camera camera{window};

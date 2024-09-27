@@ -29,6 +29,8 @@ public:
   std::vector<glm::vec3> vertices{};
   std::vector<uint32_t> indices{};
   std::shared_ptr<VMA> vma = nullptr;
+  std::shared_ptr<std::vector<std::string>> triangleNames =
+      std::make_shared<std::vector<std::string>>();
 struct VertexPC
 {
   glm::vec4 pos;  // Position

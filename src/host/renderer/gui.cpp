@@ -29,7 +29,8 @@ void Gui::oriMenu() {
   const char* items[] = {"Tri 1", "Tri 2", "Tri 3"};
   static int current_item = 0;
   static int nPoints = 100;
-  ImGui::Combo("Triangle", &current_item, items, IM_ARRAYSIZE(items));
+  ImGui::Combo("Triangle", &current_item, &State::itemGetter,
+               triangleNames->data(), triangleNames->size());
   ImGui::DragInt("Number of points to launch", &nPoints, 1, 0, 1000);
   if (ImGui::Button("Launch")) {
     state->currTri = current_item;
@@ -38,8 +39,8 @@ void Gui::oriMenu() {
   }
 }
 
-Gui::Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain)
-    : vlkn(vlkn), window(window) {
+Gui::Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain,std::shared_ptr<std::vector<std::string>> triangleNames_)
+    : vlkn(vlkn), window(window), triangleNames(triangleNames_) {
     createDescriptorPool();
     createContext(swapchain);
     uploadFonts();

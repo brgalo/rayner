@@ -37,6 +37,10 @@ GeometryHandler::GeometryHandler(std::shared_ptr<VMA> vma_) : vma(vma_) {
   loadObj("geom/colored_cube.obj");
   vertex = vma->uploadVertices(vertices, vertexAlloc);
   index = vma->uploadIndices(indices, indexAlloc);
+  triangleNames->resize(indices.size()/3);
+  for (size_t i = 0; i < triangleNames->size(); ++i) {
+    triangleNames->at(i) = "Tri " + std::to_string(i);
+  }
 }
 
 GeometryHandler::~GeometryHandler() {
