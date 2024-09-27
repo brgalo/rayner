@@ -5,6 +5,7 @@
 #include "vma.hpp"
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_enums.hpp>
 #include <vulkan/vulkan_structs.hpp>
@@ -23,8 +24,6 @@ Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
   fence = vlkn->getDevice().createFence(createInfo);
   createOutputBuffer();
   updatePushConstants(geom);
-
-  trace();
 };
 
 
@@ -215,9 +214,14 @@ void Raytracer::buildTlas() {
 
 void Raytracer::buildDescriptorSet() { descriptor.writeSetup(tlas); }
 
-void Raytracer::trace() {
+void Raytracer::trace(std::shared_ptr<State> state) {
   vk::CommandBuffer buffer = vlkn->beginSingleTimeCommands();
   rtPipeline.bind(buffer);
+
+  // update constants
+  rtPipeline.consts.currTri = state->currTri;
+
+
   buffer.pushConstants(
       rtPipeline.getLayout(), vk::ShaderStageFlagBits::eRaygenKHR, 0,
       sizeof(RaytracingPipeline::RtConsts), &rtPipeline.consts);
@@ -226,7 +230,7 @@ void Raytracer::trace() {
                             rtPipeline.getLayout(), 0, 1,
                             &descriptor.getSets().front(), 0, nullptr);
   buffer.traceRaysKHR(rtPipeline.rgenRegion, rtPipeline.missRegion,
-                      rtPipeline.hitRegion, {}, 100, 1, 1);
+                      rtPipeline.hitRegion, {}, state->nPoints, 1, 1);
 
   vlkn->endSingleTimeCommands(buffer);
   

@@ -6,8 +6,38 @@
 #include "swapchain.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 
 namespace rn {
+
+// from imgui_demo.cpp
+// Helper to display a little (?) mark which shows a tooltip when hovered.
+// In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
+static void HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+void Gui::oriMenu() {
+  const char* items[] = {"Tri 1", "Tri 2", "Tri 3"};
+  static int current_item = 0;
+  static int nPoints = 100;
+  ImGui::Combo("Triangle", &current_item, items, IM_ARRAYSIZE(items));
+  ImGui::DragInt("Number of points to launch", &nPoints, 1, 0, 1000);
+  if (ImGui::Button("Launch")) {
+    state->currTri = current_item;
+    state->nPoints = nPoints;
+    state->pLaunch = true;
+  }
+}
+
 Gui::Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain)
     : vlkn(vlkn), window(window) {
     createDescriptorPool();
@@ -26,10 +56,35 @@ Gui::~Gui() {
   vlkn.getDevice().destroyDescriptorPool(pool);
 }
 
+void Gui::gui() {
+  static int e = 0;
+  ImGui::ShowDemoWindow();
+
+  ImGui::RadioButton("Show Origins", &e, 0);
+  ImGui::SameLine();
+  ImGui::RadioButton("B", &e, 1);
+  ImGui::SameLine();
+  ImGui::RadioButton("C", &e, 2);
+  ImGui::SameLine();
+  HelpMarker("Switch between tracing modes\n"\
+             "A = show randomly sampled origins\n"\
+             "B = show hit points on the triangles");
+
+  if(e == 0) {
+    oriMenu();
+  }
+  if(e == 1) {
+    ImGui::Text("B");
+  }
+  if(e == 2) {
+    ImGui::Text("C");
+  }
+}
+
 void Gui::render(vk::CommandBuffer &buffer, uint32_t idx, vk::Extent2D extent) {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-  ImGui::ShowDemoWindow();
+  gui();
 
   ImGui::Render();
 

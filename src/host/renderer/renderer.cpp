@@ -104,7 +104,7 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
                             pipelinePts.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
 //  buffer.bindVertexBuffers(0, vertexBuffer, {0});
-  buffer.draw(100, 1, 0, 0);
+  buffer.draw(getGui()->state->nPoints, 1, 0, 0);
   
   buffer.endRenderPass();
   gui->render(buffer, idx.value(), swapChain.getExtent());

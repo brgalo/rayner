@@ -37,6 +37,7 @@ public:
   Renderer &operator=(const Renderer &) = delete;
   void render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx, RaytracingPipeline::RtConsts &outBufferAdress);
   void updateCamera(float frameTime);
+  std::shared_ptr<Gui> getGui() { return gui; };
 private:
   std::shared_ptr<VulkanHandler> vlkn = nullptr;
   Window window = Window{vlkn};

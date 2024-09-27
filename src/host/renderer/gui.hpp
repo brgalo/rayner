@@ -5,15 +5,20 @@
 #include "vknhandler.hpp"
 #include "window.hpp"
 #include <cstdint>
+#include <memory>
 #include <vector>
 
+#include "state.hpp"
+
 namespace rn {
+
 class Gui {
 public:
   Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain);
   ~Gui();
   void recreateFramebuffers(const SwapChain &swapchain);
   void render(vk::CommandBuffer &buffer, uint32_t idx, vk::Extent2D extent);
+  std::shared_ptr<State> state = std::make_shared<State>();
 private:
   VulkanHandler &vlkn;
   Window &window;
@@ -28,5 +33,10 @@ private:
   std::vector<vk::Framebuffer> framebuffers;
   vk::RenderPass renderPass;
 
+
+  void oriMenu();
+
+  // gui
+  void gui();
 };
 }

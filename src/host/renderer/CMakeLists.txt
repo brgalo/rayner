@@ -14,6 +14,9 @@ add_library(pipeline pipeline.cpp
                      descriptors.hpp
                      descriptors.cpp)
 
+add_library(colormaps colormaps.cpp
+                      colormaps.hpp)
+
 add_library(gui      gui.cpp
                      gui.hpp
                      ${IMGUI_INCLUDES}
@@ -29,5 +32,6 @@ target_link_libraries(renderer PRIVATE Vulkan::Vulkan
                                        pipeline
                                        gui
                                        vknhandler
+                                       colormaps
                                        PUBLIC GPUOpen::VulkanMemoryAllocator
                                        )

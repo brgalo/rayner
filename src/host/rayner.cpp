@@ -14,7 +14,11 @@ void Rayner::run() {
                                                                    currentTime)
             .count();
     currentTime = newTime;
-    raytracer.trace();
+    if (renderer.getGui()->state->pLaunch) {
+      raytracer.trace(renderer.getGui()->state);
+      renderer.getGui()->state->pLaunch = false;
+    };
+  
     renderer.updateCamera(frameTime);
     vlkn->getGqueue().waitIdle();
     renderer.render(geom.getVert(), geom.getIdx(), geom.indices.size(),

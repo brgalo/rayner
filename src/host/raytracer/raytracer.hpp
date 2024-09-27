@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <vulkan/vulkan.hpp>
 
 #include "descriptors.hpp"
@@ -7,6 +8,7 @@
 #include "vknhandler.hpp"
 #include <glm/fwd.hpp>
 #include <vulkan/vulkan_handles.hpp>
+#include "state.hpp"
 
 
 namespace rn {
@@ -15,7 +17,7 @@ public:
   Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom);
   ~Raytracer();
   RaytracingPipeline::RtConsts &getRtConsts() { return rtPipeline.consts; };
-  void trace();
+  void trace(std::shared_ptr<State> state);
 
 private:
   std::shared_ptr<VulkanHandler> vlkn;
@@ -37,7 +39,7 @@ private:
   vk::Buffer outBuffer;
   VmaAllocation outAlloc;
   VmaAllocationInfo outAllocInfo;
-  std::vector<glm::vec4> outData{100};
+  std::vector<glm::vec4> outData{1000};
 
   vk::AccelerationStructureInstanceKHR instance;
   TraceDescriptors descriptor;

@@ -139,6 +139,7 @@ public:
     vk::DeviceAddress verts;
     vk::DeviceAddress idx;
     vk::DeviceAddress out;
+    uint64_t currTri = 0;
   } consts;
 
 private:
