@@ -122,16 +122,16 @@ class ComputePipeline : Pipeline {
 class RaytracingPipeline : public Pipeline {
 public:
   RaytracingPipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
-                     std::shared_ptr<VulkanHandler> vulkn_);
+                     std::shared_ptr<VulkanHandler> vulkn_, std::string cHitname, std::string rGenname, std::string rMissname);
   ~RaytracingPipeline();
   
   vk::StridedDeviceAddressRegionKHR rgenRegion{};
   vk::StridedDeviceAddressRegionKHR hitRegion{};
   vk::StridedDeviceAddressRegionKHR missRegion{};
 
-  vk::ShaderModule cHit = createModule("spv/rt.rchit.spv");
-  vk::ShaderModule rGen = createModule("spv/rt.rgen.spv");
-  vk::ShaderModule rMiss = createModule("spv/rt.rmiss.spv");
+  vk::ShaderModule cHit ;
+  vk::ShaderModule rGen ;
+  vk::ShaderModule rMiss;
 
 
 
@@ -139,6 +139,8 @@ public:
     vk::DeviceAddress verts;
     vk::DeviceAddress idx;
     vk::DeviceAddress out;
+    vk::DeviceAddress ori;
+    vk::DeviceAddress dir;
     uint64_t currTri = 0;
   } consts;
 

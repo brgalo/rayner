@@ -3,6 +3,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "implot.h"
+#include "pipeline.hpp"
 #include "swapchain.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -31,13 +32,28 @@ void Gui::oriMenu() {
   static int nPoints = 100;
   ImGui::Combo("Triangle", &current_item, &State::itemGetter,
                triangleNames->data(), triangleNames->size());
-  ImGui::DragInt("Number of points to launch", &nPoints, 1, 0, 1000);
+  ImGui::DragInt("Number of points to sample", &nPoints, 1, 0, 1000);
   if (ImGui::Button("Launch")) {
     state->currTri = current_item;
     state->nPoints = nPoints;
     state->pLaunch = true;
   }
 }
+
+void Gui::rayMenu() {
+
+  static int current_item = 0;
+  static int nRays = 100;
+  ImGui::Combo("Triangle", &current_item, &State::itemGetter,
+               triangleNames->data(), triangleNames->size());
+  ImGui::DragInt("Number of rays to launch", &nRays, 1, 0, 1000);
+  if (ImGui::Button("Launch")) {
+    state->currTri = current_item;
+    state->nRays = nRays;
+    state->rLaunch = true;
+  }
+};
+
 
 Gui::Gui(VulkanHandler &vlkn, Window &window, const SwapChain &swapchain,std::shared_ptr<std::vector<std::string>> triangleNames_)
     : vlkn(vlkn), window(window), triangleNames(triangleNames_) {
@@ -61,9 +77,9 @@ void Gui::gui() {
   static int e = 0;
   ImGui::ShowDemoWindow();
 
-  ImGui::RadioButton("Show Origins", &e, 0);
+  ImGui::RadioButton("Sample Origins", &e, 0);
   ImGui::SameLine();
-  ImGui::RadioButton("B", &e, 1);
+  ImGui::RadioButton("Trace Rays", &e, 1);
   ImGui::SameLine();
   ImGui::RadioButton("C", &e, 2);
   ImGui::SameLine();
@@ -75,7 +91,7 @@ void Gui::gui() {
     oriMenu();
   }
   if(e == 1) {
-    ImGui::Text("B");
+    rayMenu();
   }
   if(e == 2) {
     ImGui::Text("C");

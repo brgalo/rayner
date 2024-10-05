@@ -15,8 +15,12 @@ void Rayner::run() {
             .count();
     currentTime = newTime;
     if (renderer.getGui()->state->pLaunch) {
-      raytracer.trace(renderer.getGui()->state);
+      raytracer.traceOri(renderer.getGui()->state);
       renderer.getGui()->state->pLaunch = false;
+    };
+    if (renderer.getGui()->state->rLaunch) {
+      raytracer.traceRays(renderer.getGui()->state);
+      renderer.getGui()->state->rLaunch = false;
     };
   
     renderer.updateCamera(frameTime);

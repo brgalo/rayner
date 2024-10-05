@@ -77,8 +77,12 @@ RaytracingPipeline::~RaytracingPipeline() {
 
 RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
                                        vk::PipelineBindPoint bindP,
-                                       std::shared_ptr<VulkanHandler> vulkn_)
-    : Pipeline(set_, bindP, vulkn_) {
+                                       std::shared_ptr<VulkanHandler> vulkn_,
+                                       std::string cHitname,
+                                       std::string rGenname,
+                                       std::string rMissname)
+    : Pipeline(set_, bindP, vulkn_), cHit(createModule(cHitname)),
+      rGen(createModule(rGenname)), rMiss(createModule(rMissname)) {
       RaytracingPipeline::createLayout();
 
       std::array<vk::PipelineShaderStageCreateInfo, 3> shaderStages{

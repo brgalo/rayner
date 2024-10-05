@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <vector>
 #include <vulkan/vulkan.hpp>
 
 #include "descriptors.hpp"
@@ -16,16 +17,19 @@ class Raytracer {
 public:
   Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom);
   ~Raytracer();
-  RaytracingPipeline::RtConsts &getRtConsts() { return rtPipeline.consts; };
-  void trace(std::shared_ptr<State> state);
+  RaytracingPipeline::RtConsts &getRtConsts() { return rtPipelinePoints.consts; };
+  void traceOri(std::shared_ptr<State> state);
+  void traceRays(std::shared_ptr<State> state);
 
 private:
   std::shared_ptr<VulkanHandler> vlkn;
   void buildBlas(GeometryHandler &geom);
   void buildTlas();
   void buildDescriptorSet();
-  void updatePushConstants(GeometryHandler &geom);
+  void updatePushConstantsPoints(GeometryHandler &geom);
+  void updatePushConstantsRays(GeometryHandler &geom);
   void createOutputBuffer();
+  void createOutputBufferRays();
 
   vk::AccelerationStructureKHR blas;
   vk::AccelerationStructureKHR tlas;
@@ -37,8 +41,14 @@ private:
   VmaAllocation instanceAlloc;
 
   vk::Buffer outBuffer;
+  vk::Buffer oriBuffer;
+  vk::Buffer dirBuffer;
   VmaAllocation outAlloc;
   VmaAllocationInfo outAllocInfo;
+  VmaAllocation oriAlloc;
+  VmaAllocationInfo oriAllocInfo;
+  VmaAllocation dirAlloc;
+  VmaAllocationInfo dirAllocInfo;
   std::vector<glm::vec4> outData{1000};
 
   vk::AccelerationStructureInstanceKHR instance;
@@ -49,7 +59,8 @@ private:
 
   vk::Fence fence;
 
-  RaytracingPipeline rtPipeline;
-};
+  RaytracingPipeline rtPipelinePoints;
+  RaytracingPipeline rtPipelineRays;
+  };
 
 } // namespace rn

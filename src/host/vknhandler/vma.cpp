@@ -104,9 +104,9 @@ vk::Buffer VMA::uploadIndices(const std::vector<uint32_t> &idx, VmaAllocation &a
 }
 
 vk::Buffer VMA::uploadInstanceB(const vk::AccelerationStructureInstanceKHR &instance, VmaAllocation &alloc) {
-  VmaAllocationCreateInfo instanceAllocCreateInfo{
-      VMA_ALLOCATION_CREATE_MAPPED_BIT, VMA_MEMORY_USAGE_GPU_ONLY,
-      VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT};
+
+
+  VmaAllocationCreateInfo instanceAllocCreateInfo{{},VMA_MEMORY_USAGE_GPU_ONLY};
 
   return uploadWithStaging(
       &instance, sizeof(instance), alloc,

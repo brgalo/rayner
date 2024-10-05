@@ -37,6 +37,7 @@ private:
   vk::RenderPass renderPass;
 
   void oriMenu();
+  void rayMenu();
 
   // gui
   void gui();

@@ -1,0 +1,50 @@
+#version 460
+#extension GL_EXT_debug_printf : enable
+#extension GL_GOOGLE_include_directive : require
+#include "commonrt.glsl"
+#include "random.glsl"
+
+struct pushConsts {
+    uint64_t vertsBufferAddress;
+    uint64_t idxBufferAddress;
+    uint64_t outBufferAddress;
+    uint64_t oriBufferAddress;
+    uint64_t dirBufferAddress;
+    uint64_t currentTri;
+};
+
+layout(push_constant) uniform _pushConsts { pushConsts consts;};
+
+
+layout(buffer_reference, scalar) buffer OriBuffer{vec4 oris[];};
+layout(buffer_reference, scalar) buffer DirBuffer{vec4 dirs[];};
+layout(buffer_reference, scalar) buffer VertBuffer{vec4 verts[];};
+layout(buffer_reference, scalar) buffer IndexBuffer{uint idxs[];};
+
+
+layout(location = 0) rayPayloadEXT RayPayload payload;
+
+layout(set = 0, binding = 0) uniform accelerationStructureEXT scene;
+
+void main() {
+    uint tri = uint(consts.currentTri);
+    uint seed = tea(gl_LaunchIDEXT.x, 0);
+
+    OriBuffer oribuf = OriBuffer(consts.oriBufferAddress);
+    DirBuffer dirbuf = DirBuffer(consts.dirBufferAddress);
+    VertBuffer vertbuf = VertBuffer(consts.vertsBufferAddress);
+    IndexBuffer idxbuf = IndexBuffer(consts.idxBufferAddress);
+
+    uvec3 idx = uvec3(idxbuf.idxs[tri*3 + 0],
+                      idxbuf.idxs[tri*3 + 1],
+                      idxbuf.idxs[tri*3 + 2]);
+    vec4 A,B,C,temp;
+    float sr1 = sqrt(rnd(seed));
+    float r2 = rnd(seed);
+    A = vertbuf.verts[idx.x];
+    B = vertbuf.verts[idx.y];
+    C = vertbuf.verts[idx.z];
+    temp = A*(1-sr1) + B*sr1*(1-r2) + C*sr1*r2;
+//    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, vec3(0,0,0),0,vec3(1,0,0),1000,0);
+    oribuf.oris[gl_LaunchIDEXT.x] = temp;
+}

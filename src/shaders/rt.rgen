@@ -5,9 +5,11 @@
 #include "random.glsl"
 
 struct pushConsts {
-    uint64_t vertsBufferAdress;
-    uint64_t idxBufferAdress;
-    uint64_t outBufferAdress;
+    uint64_t vertsBufferAddress;
+    uint64_t idxBufferAddress;
+    uint64_t outBufferAddress;
+    uint64_t oriBufferAddress;
+    uint64_t dirBufferAddress;
     uint64_t currentTri;
 };
 
@@ -27,9 +29,9 @@ void main() {
     uint tri = uint(consts.currentTri);
     uint seed = tea(gl_LaunchIDEXT.x, 0);
 
-    OutBuffer outbuf = OutBuffer(consts.outBufferAdress);
-    VertBuffer vertbuf = VertBuffer(consts.vertsBufferAdress);
-    IndexBuffer idxbuf = IndexBuffer(consts.idxBufferAdress);
+    OutBuffer outbuf = OutBuffer(consts.outBufferAddress);
+    VertBuffer vertbuf = VertBuffer(consts.vertsBufferAddress);
+    IndexBuffer idxbuf = IndexBuffer(consts.idxBufferAddress);
     uvec3 idx = uvec3(idxbuf.idxs[tri*3 + 0],
                       idxbuf.idxs[tri*3 + 1],
                       idxbuf.idxs[tri*3 + 2]);

@@ -6,24 +6,36 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_enums.hpp>
+#include <vulkan/vulkan_handles.hpp>
 #include <vulkan/vulkan_structs.hpp>
 
 namespace rn {
 Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
                      GeometryHandler &geom)
     : vlkn(vlkn_), descriptor(vlkn_),
-      rtPipeline(descriptor, vk::PipelineBindPoint::eRayTracingKHR,
-                 vlkn) {
-  buildBlas(geom);
+      rtPipelinePoints(descriptor, vk::PipelineBindPoint::eRayTracingKHR, vlkn,
+                       std::string("spv/rt.rchit.spv"),
+                       std::string("spv/rt.rgen.spv"),
+                       std::string("spv/rt.rmiss.spv")),
+      rtPipelineRays(descriptor, vk::PipelineBindPoint::eRayTracingKHR, vlkn,
+                     std::string("spv/rttri.rchit.spv"),
+                     std::string("spv/rttri.rgen.spv"),
+                     std::string("spv/rttri.rmiss.spv")) {
+              
+              buildBlas(geom);
   buildTlas();
   buildDescriptorSet();
 
   vk::FenceCreateInfo createInfo{vk::FenceCreateFlagBits::eSignaled};
   fence = vlkn->getDevice().createFence(createInfo);
   createOutputBuffer();
-  updatePushConstants(geom);
+  updatePushConstantsPoints(geom);
+
+  createOutputBufferRays();
+  updatePushConstantsRays(geom);
 };
 
 
@@ -38,15 +50,20 @@ Raytracer::~Raytracer() {
   vlkn->getVma()->destroyBuffer(blasAlloc, blasBuffer);
   vlkn->getVma()->destroyBuffer(instanceAlloc, instanceBuffer);
   vlkn->getVma()->destroyBuffer(outAlloc, outBuffer);
+  vlkn->getVma()->destroyBuffer(oriAlloc, oriBuffer);
+  vlkn->getVma()->destroyBuffer(dirAlloc, dirBuffer);
   vlkn->getDevice().destroyFence(fence);
 }
 
 void Raytracer::buildBlas(GeometryHandler &geom) {
+
+  uint32_t primitiveCount = geom.indices.size() / 3;
+  
   vk::AccelerationStructureGeometryTrianglesDataKHR triangles{
-    vk::Format::eR32G32B32A32Sfloat,
+    vk::Format::eR32G32B32Sfloat,
         vlkn->getVma()->getDeviceAddress(geom.getVert()),
-        static_cast<uint32_t>(sizeof(glm::vec3)),
-        static_cast<uint32_t>(geom.indices.size()),
+        static_cast<uint32_t>(sizeof(glm::vec4)),
+        primitiveCount,
       vk::IndexType::eUint32,
       vlkn->getVma()->getDeviceAddress(geom.getIdx()),
       {}};
@@ -56,7 +73,7 @@ void Raytracer::buildBlas(GeometryHandler &geom) {
       vk::GeometryFlagBitsKHR::eOpaque};
 
   vk::AccelerationStructureBuildRangeInfoKHR rangeInfo{
-      static_cast<uint32_t>(geom.indices.size() / 3), 0, 0, 0};
+      primitiveCount, 0, 0, 0};
 
   vk::AccelerationStructureBuildGeometryInfoKHR buildInfo{
       vk::AccelerationStructureTypeKHR::eBottomLevel,
@@ -69,7 +86,8 @@ void Raytracer::buildBlas(GeometryHandler &geom) {
 
   vk::AccelerationStructureBuildSizesInfoKHR sizeInfo =
       vlkn->getDevice().getAccelerationStructureBuildSizesKHR(
-          vk::AccelerationStructureBuildTypeKHR::eDevice, buildInfo, 2);
+          vk::AccelerationStructureBuildTypeKHR::eDevice, buildInfo,
+          primitiveCount);
 
   vk::BufferCreateInfo blasBufferCreateInfo{
       {},
@@ -136,18 +154,12 @@ void Raytracer::buildTlas() {
   instance.accelerationStructureReference = blasAddress;
 
   VmaAllocationInfo instanceInfo;
-  vk::BufferCreateInfo instanceBufferCreateInfo{
-      {},
-      sizeof(instance),
-      vk::BufferUsageFlagBits::eTransferDst |
-          vk::BufferUsageFlagBits::eShaderDeviceAddress};
 
   instanceBuffer = vlkn->getVma()->uploadInstanceB(instance, instanceAlloc);
   vk::DeviceAddress instanceBufferAddress = vlkn->getVma()->getDeviceAddress(instanceBuffer);
 
   vk::AccelerationStructureBuildRangeInfoKHR rangeInfo{1, 0, 0, 0};
-  vk::AccelerationStructureGeometryInstancesDataKHR instancesVK {
-    VK_FALSE,instanceBufferAddress};
+  vk::AccelerationStructureGeometryInstancesDataKHR instancesVK {VK_TRUE,instanceBufferAddress};
 
   vk::AccelerationStructureGeometryKHR geometry{vk::GeometryTypeKHR::eInstances,
                                                 instancesVK};
@@ -214,23 +226,23 @@ void Raytracer::buildTlas() {
 
 void Raytracer::buildDescriptorSet() { descriptor.writeSetup(tlas); }
 
-void Raytracer::trace(std::shared_ptr<State> state) {
+void Raytracer::traceOri(std::shared_ptr<State> state) {
   vk::CommandBuffer buffer = vlkn->beginSingleTimeCommands();
-  rtPipeline.bind(buffer);
+  rtPipelinePoints.bind(buffer);
 
   // update constants
-  rtPipeline.consts.currTri = state->currTri;
+  rtPipelinePoints.consts.currTri = state->currTri;
 
 
   buffer.pushConstants(
-      rtPipeline.getLayout(), vk::ShaderStageFlagBits::eRaygenKHR, 0,
-      sizeof(RaytracingPipeline::RtConsts), &rtPipeline.consts);
+      rtPipelinePoints.getLayout(), vk::ShaderStageFlagBits::eRaygenKHR, 0,
+      sizeof(RaytracingPipeline::RtConsts), &rtPipelinePoints.consts);
   
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR,
-                            rtPipeline.getLayout(), 0, 1,
+                            rtPipelinePoints.getLayout(), 0, 1,
                             &descriptor.getSets().front(), 0, nullptr);
-  buffer.traceRaysKHR(rtPipeline.rgenRegion, rtPipeline.missRegion,
-                      rtPipeline.hitRegion, {}, state->nPoints, 1, 1);
+  buffer.traceRaysKHR(rtPipelinePoints.rgenRegion, rtPipelinePoints.missRegion,
+                      rtPipelinePoints.hitRegion, {}, state->nPoints, 1, 1);
 
   vlkn->endSingleTimeCommands(buffer);
   
@@ -251,6 +263,38 @@ void Raytracer::trace(std::shared_ptr<State> state) {
   vlkn->getGqueue().waitIdle();
   vlkn->getDevice().waitIdle();
 
+//  const float *pData =
+//      reinterpret_cast<const float *>(outAllocInfo.pMappedData);
+//
+//  for (size_t i = 0; i < outData.size(); ++i) {
+//    outData[i] = glm::vec4(pData[i * 4], pData[i * 4 + 1], pData[i * 4 + 2],
+//                           pData[i * 4 + 3]);
+//  }
+}
+
+void Raytracer::traceRays(std::shared_ptr<State> state) {
+  vk::CommandBuffer buffer = vlkn->beginSingleTimeCommands();
+  rtPipelineRays.bind(buffer);
+
+  // update constants
+  rtPipelineRays.consts.currTri = state->currTri;
+
+
+  buffer.pushConstants(
+      rtPipelineRays.getLayout(), vk::ShaderStageFlagBits::eRaygenKHR, 0,
+      sizeof(RaytracingPipeline::RtConsts), &rtPipelineRays.consts);
+  
+  buffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR,
+                            rtPipelineRays.getLayout(), 0, 1,
+                            &descriptor.getSets().front(), 0, nullptr);
+  buffer.traceRaysKHR(rtPipelineRays.rgenRegion, rtPipelineRays.missRegion,
+                      rtPipelineRays.hitRegion, {}, state->nRays, 1, 1);
+
+  vlkn->endSingleTimeCommands(buffer);
+  
+  vlkn->getGqueue().waitIdle();
+  vlkn->getDevice().waitIdle();
+
   const float *pData =
       reinterpret_cast<const float *>(outAllocInfo.pMappedData);
 
@@ -261,14 +305,21 @@ void Raytracer::trace(std::shared_ptr<State> state) {
 
 }
 
-void Raytracer::updatePushConstants(GeometryHandler &geom) {
-  rtPipeline.consts.verts = vlkn->getVma()->getDeviceAddress(geom.getVert());
-  rtPipeline.consts.idx = vlkn->getVma()->getDeviceAddress(geom.getIdx());
-  rtPipeline.consts.out = vlkn->getVma()->getDeviceAddress(outBuffer);
+void Raytracer::updatePushConstantsPoints(GeometryHandler &geom) {
+  rtPipelinePoints.consts.verts = vlkn->getVma()->getDeviceAddress(geom.getVert());
+  rtPipelinePoints.consts.idx = vlkn->getVma()->getDeviceAddress(geom.getIdx());
+  rtPipelinePoints.consts.out = vlkn->getVma()->getDeviceAddress(outBuffer);
+}
+
+void Raytracer::updatePushConstantsRays(GeometryHandler &geom) {
+  rtPipelineRays.consts.verts = vlkn->getVma()->getDeviceAddress(geom.getVert());
+  rtPipelineRays.consts.idx = vlkn->getVma()->getDeviceAddress(geom.getIdx());
+  rtPipelineRays.consts.ori = vlkn->getVma()->getDeviceAddress(oriBuffer);
+  rtPipelineRays.consts.dir = vlkn->getVma()->getDeviceAddress(dirBuffer);
 }
 
 void Raytracer::createOutputBuffer() {
-  vk::DeviceSize size = sizeof(glm::vec3)*outData.size();
+  vk::DeviceSize size = sizeof(glm::vec4)*outData.size();
   vk::BufferCreateInfo outBufferCreateInfo{
       {},
       size,
@@ -282,7 +333,27 @@ void Raytracer::createOutputBuffer() {
   outBuffer = vlkn->getVma()->createBuffer(outAlloc, outAllocInfo,
                                            outBufferCreateInfo, outInfo);
 
-  rtPipeline.consts.out = vlkn->getVma()->getDeviceAddress(outBuffer);
+  rtPipelinePoints.consts.out = vlkn->getVma()->getDeviceAddress(outBuffer);
+}
+
+void Raytracer::createOutputBufferRays() {
+  vk::DeviceSize size = sizeof(glm::vec4)*outData.size();
+  vk::BufferCreateInfo oriBufferCreateInfo{
+      {},
+      size,
+      vk::BufferUsageFlagBits::eStorageBuffer |
+          vk::BufferUsageFlagBits::eShaderDeviceAddress};
+  VmaAllocationCreateInfo oriInfo{VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
+                                      VMA_ALLOCATION_CREATE_MAPPED_BIT,
+                                  VMA_MEMORY_USAGE_AUTO,
+                                  VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT};
+
+  oriBuffer = vlkn->getVma()->createBuffer(oriAlloc, oriAllocInfo,
+                                           oriBufferCreateInfo, oriInfo);
+  dirBuffer = vlkn->getVma()->createBuffer(dirAlloc, dirAllocInfo,
+                                           oriBufferCreateInfo, oriInfo);
+  rtPipelineRays.consts.ori = vlkn->getVma()->getDeviceAddress(oriBuffer);
+  rtPipelineRays.consts.dir = vlkn->getVma()->getDeviceAddress(dirBuffer);
 }
   
 // namespace rn
