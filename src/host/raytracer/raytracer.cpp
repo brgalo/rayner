@@ -159,7 +159,7 @@ void Raytracer::buildTlas() {
   vk::DeviceAddress instanceBufferAddress = vlkn->getVma()->getDeviceAddress(instanceBuffer);
 
   vk::AccelerationStructureBuildRangeInfoKHR rangeInfo{1, 0, 0, 0};
-  vk::AccelerationStructureGeometryInstancesDataKHR instancesVK {VK_TRUE,instanceBufferAddress};
+  vk::AccelerationStructureGeometryInstancesDataKHR instancesVK {VK_FALSE,instanceBufferAddress};
 
   vk::AccelerationStructureGeometryKHR geometry{vk::GeometryTypeKHR::eInstances,
                                                 instancesVK};
