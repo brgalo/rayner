@@ -45,6 +45,6 @@ void main() {
     B = vertbuf.verts[idx.y];
     C = vertbuf.verts[idx.z];
     temp = A*(1-sr1) + B*sr1*(1-r2) + C*sr1*r2;
-//    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, vec3(0,0,0),0,vec3(1,0,0),1000,0);
+    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, vec3(0,0,0),0,vec3(1,0,0),1000,0);
     oribuf.oris[gl_LaunchIDEXT.x] = temp;
 }

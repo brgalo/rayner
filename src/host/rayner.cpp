@@ -26,7 +26,7 @@ void Rayner::run() {
     renderer.updateCamera(frameTime);
     vlkn->getGqueue().waitIdle();
     renderer.render(geom.getVert(), geom.getIdx(), geom.indices.size(),
-                    raytracer.getRtConsts());
+                    raytracer.getRtConstsPoints(),raytracer.getRtConstsRays());
   }
 }
 

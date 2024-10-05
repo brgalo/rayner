@@ -38,7 +38,9 @@ public:
   bool run();
   Renderer(const Renderer &) = delete;
   Renderer &operator=(const Renderer &) = delete;
-  void render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx, RaytracingPipeline::RtConsts &outBufferAdress);
+  void render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer, size_t nIdx,
+              RaytracingPipeline::RtConsts &rtConstsPoints,
+              RaytracingPipeline::RtConsts &rtConstsRays);
   void updateCamera(float frameTime);
   std::shared_ptr<Gui> getGui() { return gui; };
 private:

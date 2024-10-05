@@ -295,14 +295,6 @@ void Raytracer::traceRays(std::shared_ptr<State> state) {
   vlkn->getGqueue().waitIdle();
   vlkn->getDevice().waitIdle();
 
-  const float *pData =
-      reinterpret_cast<const float *>(outAllocInfo.pMappedData);
-
-  for (size_t i = 0; i < outData.size(); ++i) {
-    outData[i] = glm::vec4(pData[i * 4], pData[i * 4 + 1], pData[i * 4 + 2],
-                           pData[i * 4 + 3]);
-  }
-
 }
 
 void Raytracer::updatePushConstantsPoints(GeometryHandler &geom) {

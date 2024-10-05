@@ -37,6 +37,7 @@ void Gui::oriMenu() {
     state->currTri = current_item;
     state->nPoints = nPoints;
     state->pLaunch = true;
+    state->pShow = true;
   }
 }
 
@@ -51,6 +52,7 @@ void Gui::rayMenu() {
     state->currTri = current_item;
     state->nRays = nRays;
     state->rLaunch = true;
+    state->rShow = true;
   }
 };
 
@@ -96,6 +98,10 @@ void Gui::gui() {
   if(e == 2) {
     ImGui::Text("C");
   }
+
+  ImGui::Checkbox("Show Oris", &state->pShow);
+  ImGui::SameLine();
+  ImGui::Checkbox("Show Rays", &state->rShow);
 }
 
 void Gui::render(vk::CommandBuffer &buffer, uint32_t idx, vk::Extent2D extent) {

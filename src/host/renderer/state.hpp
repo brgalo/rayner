@@ -15,7 +15,9 @@ struct State {
 
 
   bool pLaunch = false;
+  bool pShow = false;
   bool rLaunch = false;
+  bool rShow = false;
 };
 
 };

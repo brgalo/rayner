@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_handles.hpp>
 #include "vma.hpp"
 
 namespace rn {
@@ -41,7 +43,8 @@ void Renderer::updateCamera(float frameTime) {
 }
 
 void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
-                      size_t nIdx, RaytracingPipeline::RtConsts &RtConsts) {
+                      size_t nIdx, RaytracingPipeline::RtConsts &RtConstsPoints,
+                      RaytracingPipeline::RtConsts &RtConstsRays) {
     vlkn->getDevice().waitIdle();
 
   auto idx =
@@ -95,17 +98,35 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
   buffer.draw(4, 1, 0, 0);
 */
   // render points
+  if (getGui()->state->pShow) {
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinePts.get());
   buffer.pushConstants(pipelinePts.getLayout(),
                        vk::ShaderStageFlagBits::eVertex |
                            vk::ShaderStageFlagBits::eFragment,
-                       0, sizeof(RtConsts), &RtConsts);
+                       0, sizeof(RtConstsPoints), &RtConstsPoints);
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                             pipelinePts.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
 //  buffer.bindVertexBuffers(0, vertexBuffer, {0});
   buffer.draw(getGui()->state->nPoints, 1, 0, 0);
-  
+  };
+
+  vk::DeviceAddress temp = RtConstsRays.out;
+  if (getGui()->state->rShow) {
+    buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinePts.get());
+
+  RtConstsRays.out = RtConstsRays.ori;
+  buffer.pushConstants(pipelinePts.getLayout(),
+                       vk::ShaderStageFlagBits::eVertex |
+                           vk::ShaderStageFlagBits::eFragment,
+                       0, sizeof(RtConstsRays), &RtConstsRays);
+  buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                            pipelinePts.getLayout(), 0,
+                            descriptors.getSets().at(syncIdx), nullptr);
+  buffer.draw(getGui()->state->nRays, 1, 0, 0);
+  };
+
+
   buffer.endRenderPass();
   gui->render(buffer, idx.value(), swapChain.getExtent());
   buffer.end();
@@ -133,6 +154,10 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
     return;
   }
   vlkn->getDevice().waitIdle();
+
+  if (getGui()->state->pShow) {
+    RtConstsRays.out = temp;
+  };
 
   syncIdx = ++syncIdx % SwapChain::MAX_FRAMES_IN_FLIGHT;
 } 

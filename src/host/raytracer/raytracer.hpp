@@ -17,7 +17,12 @@ class Raytracer {
 public:
   Raytracer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom);
   ~Raytracer();
-  RaytracingPipeline::RtConsts &getRtConsts() { return rtPipelinePoints.consts; };
+  RaytracingPipeline::RtConsts &getRtConstsPoints() {
+    return rtPipelinePoints.consts;
+  };
+  RaytracingPipeline::RtConsts &getRtConstsRays() {
+    return rtPipelineRays.consts;
+  };
   void traceOri(std::shared_ptr<State> state);
   void traceRays(std::shared_ptr<State> state);
 

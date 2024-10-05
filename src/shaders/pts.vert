@@ -12,17 +12,22 @@ layout (set = 0, binding = 0) uniform GlobalUbo {
 } ubo;
 
 struct pushConsts {
-    uint64_t vertsBufferAdress;
-    uint64_t idxBufferAdress;
-    uint64_t outBufferAdress;
+    uint64_t vertsBufferAddress;
+    uint64_t idxBufferAddress;
+    uint64_t outBufferAddress;
+    uint64_t oriBufferAddress;
+    uint64_t dirBufferAddress;
+    uint64_t currentTri;
 };
+
 
 layout(buffer_reference, scalar) buffer OutBuffer{vec4 outs[];};
 
 layout(push_constant) uniform _pushConsts { pushConsts consts;};
 
 void main() {
-    OutBuffer outbuf = OutBuffer(consts.outBufferAdress);
+    // always uses outbuf var -> change push consts in render call to point to right buffer!
+    OutBuffer outbuf = OutBuffer(consts.outBufferAddress);
 
 	gl_PointSize = 10.0f;
 	gl_Position = (ubo.projectionViewMatrix * outbuf.outs[gl_VertexIndex]);
