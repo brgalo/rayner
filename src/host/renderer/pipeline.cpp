@@ -50,11 +50,8 @@ GraphicsPipelineLines::GraphicsPipelineLines(
     std::shared_ptr<VulkanHandler> vlkn)
     : GraphicsPipeline(set_, renderPass_, vlkn) {
   GraphicsPipelineLines::config();
-  auto inputDescription = GeometryHandler::getInputDescription().front();
-  auto attributeDescription = GeometryHandler::getAttributeDescription().front();
+  vk::PipelineVertexInputStateCreateInfo createInfo{{}, 0, nullptr, 0, nullptr};
 
-  vk::PipelineVertexInputStateCreateInfo createInfo{
-      {}, inputDescription, attributeDescription};
   init("spv/lin.vert.spv", "spv/lin.frag.spv", createInfo);
 };
 

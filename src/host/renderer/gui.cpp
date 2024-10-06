@@ -52,7 +52,8 @@ void Gui::rayMenu() {
     state->currTri = current_item;
     state->nRays = nRays;
     state->rLaunch = true;
-    state->rShow = true;
+    state->hitShow = true;
+    state->rayShow = true;
   }
 };
 
@@ -101,7 +102,7 @@ void Gui::gui() {
 
   ImGui::Checkbox("Show Oris", &state->pShow);
   ImGui::SameLine();
-  ImGui::Checkbox("Show Rays", &state->rShow);
+  ImGui::Checkbox("Show Rays", &state->hitShow);
 }
 
 void Gui::render(vk::CommandBuffer &buffer, uint32_t idx, vk::Extent2D extent) {

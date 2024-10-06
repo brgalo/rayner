@@ -82,21 +82,22 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
   buffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(swapChain.getExtent().width),
                                      static_cast<float>(swapChain.getExtent().height), 0.0f, 1.0f));
   buffer.setScissor(0, vk::Rect2D(vk::Offset2D{0, 0}, swapChain.getExtent()));
-  /*buffer.drawIndexed(nIdx, 1, 0, 0, 0);
+  //buffer.drawIndexed(nIdx, 1, 0, 0, 0);
 
   // render lines
+  if (getGui()->state->rayShow) {
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineLin.get());
   buffer.setLineWidth(5.f);
   buffer.pushConstants(pipelineLin.getLayout(),
                        vk::ShaderStageFlagBits::eVertex |
                            vk::ShaderStageFlagBits::eFragment,
-                       0, sizeof(Consts), &consts);
+                       0, sizeof(RtConstsRays), &RtConstsRays);
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                             pipelineLin.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
   buffer.bindVertexBuffers(0, vertexBuffer, {0});
-  buffer.draw(4, 1, 0, 0);
-*/
+  buffer.draw(getGui()->state->nRays, 1, 0, 0);
+  }
   // render points
   if (getGui()->state->pShow) {
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinePts.get());
@@ -112,7 +113,7 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
   };
 
   vk::DeviceAddress temp = RtConstsRays.out;
-  if (getGui()->state->rShow) {
+  if (getGui()->state->hitShow) {
     buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinePts.get());
 
   RtConstsRays.out = RtConstsRays.dir;
