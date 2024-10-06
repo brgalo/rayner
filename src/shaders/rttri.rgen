@@ -47,7 +47,7 @@ void main() {
     temp = A*(1-sr1) + B*sr1*(1-r2) + C*sr1*r2;
 
     // compute normal
-    n = -vec4(cross(vec3(A-B),vec3(C-B)),0.0);
+    n = vec4(cross(vec3(A-B),vec3(C-B)),0.0);
     n.xyz = normalize(n.xyz);
 
     temp.xyz = offsetRay(temp.xyz, n.xyz);
@@ -64,7 +64,7 @@ void main() {
     temp.w = 10;
     }
     else {
-        temp += vec4(0,0.3,0,0);
+        temp += n*0.1;
     temp.w = 5;
     }
 

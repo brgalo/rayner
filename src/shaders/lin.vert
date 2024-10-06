@@ -20,7 +20,8 @@ struct pushConsts {
     uint64_t currentTri;
 };
 
-layout(buffer_reference, scalar) buffer OutBuffer{vec4 outs[];};
+layout(buffer_reference, scalar) buffer OriBuffer{vec4 oris[];};
+layout(buffer_reference, scalar) buffer DirBuffer{vec4 dirs[];};
 
 layout(push_constant) uniform _pushConsts { pushConsts consts;};
 
@@ -28,14 +29,19 @@ const float AMBIENT = 0.02;
 
 void main() {
 
-    OutBuffer outbuf = OutBuffer(consts.oriBufferAddress);
+    OriBuffer oribuf = OriBuffer(consts.oriBufferAddress);
+    DirBuffer dirbuf = DirBuffer(consts.dirBufferAddress);
+
     if (gl_VertexIndex % 2 ==0) {
-        outbuf = OutBuffer(consts.dirBufferAddress);
+    gl_Position = ubo.projectionViewMatrix*vec4(oribuf.oris[gl_VertexIndex/2].xyz,1);
+    } else {
+    gl_Position = ubo.projectionViewMatrix*vec4(dirbuf.dirs[gl_VertexIndex/2].xyz,1);
     }
 
-
-    gl_Position = ubo.projectionViewMatrix*outbuf.outs[gl_VertexIndex/2];
-
     float lightIntensity = 0.8 ;
-    fragColor = vec3(0.8,0.3,0.2);
+    if(dirbuf.dirs[gl_VertexIndex/2].w > 7) {
+    fragColor = vec3(1,0.2,0.2);
+    } else {
+        fragColor = vec3(0.2,1,0.2);
+    }
 }

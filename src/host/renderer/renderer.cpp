@@ -96,7 +96,7 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
                             pipelineLin.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
   buffer.bindVertexBuffers(0, vertexBuffer, {0});
-  buffer.draw(getGui()->state->nRays, 1, 0, 0);
+  buffer.draw(getGui()->state->nRays*2, 1, 0, 0);
   }
   // render points
   if (getGui()->state->pShow) {
