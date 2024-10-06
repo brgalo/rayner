@@ -87,7 +87,7 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
   // render lines
   if (getGui()->state->rayShow) {
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineLin.get());
-  buffer.setLineWidth(5.f);
+  buffer.setLineWidth(2.f);
   buffer.pushConstants(pipelineLin.getLayout(),
                        vk::ShaderStageFlagBits::eVertex |
                            vk::ShaderStageFlagBits::eFragment,
@@ -97,7 +97,8 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
                             descriptors.getSets().at(syncIdx), nullptr);
   buffer.bindVertexBuffers(0, vertexBuffer, {0});
   buffer.draw(getGui()->state->nRays*2, 1, 0, 0);
-  }
+  };
+
   // render points
   if (getGui()->state->pShow) {
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinePts.get());

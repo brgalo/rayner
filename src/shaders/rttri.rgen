@@ -27,6 +27,8 @@ layout(location = 0) rayPayloadEXT RayPayload payload;
 layout(set = 0, binding = 0) uniform accelerationStructureEXT scene;
 
 void main() {
+
+    // setting up constants and buffer references for the shader
     uint tri = uint(consts.currentTri);
     uint seed = tea(gl_LaunchIDEXT.x, 0);
 
@@ -38,36 +40,48 @@ void main() {
     uvec3 idx = uvec3(idxbuf.idxs[tri*3 + 0],
                       idxbuf.idxs[tri*3 + 1],
                       idxbuf.idxs[tri*3 + 2]);
-    vec4 A,B,C,n,temp;
+
+    // random vals for random sampling
     float sr1 = sqrt(rnd(seed));
     float r2 = rnd(seed);
+    float rayEnergy = rnd(seed);
+    float phi =  acos(rayEnergy);
+    float teta = rnd(seed)*radians(360);
+
+    // retrieve geom data
+    vec4 A,B,C,ori,hit;
+
     A = vertbuf.verts[idx.x];
     B = vertbuf.verts[idx.y];
     C = vertbuf.verts[idx.z];
-    temp = A*(1-sr1) + B*sr1*(1-r2) + C*sr1*r2;
+    ori = A*(1-sr1) + B*sr1*(1-r2) + C*sr1*r2;
 
+    vec3 normal,base_1,base_2,dir;
     // compute normal
-    n = vec4(cross(vec3(A-B),vec3(C-B)),0.0);
-    n.xyz = normalize(n.xyz);
+    base_1 = normalize(A.xyz-B.xyz);
+    normal = normalize(cross(base_1,C.xyz-B.xyz));
+    base_2 = normalize(cross(base_1,normal));
 
-    temp.xyz = offsetRay(temp.xyz, n.xyz);
+    // compute dir
+    dir = sin(phi)*(sin(teta)*base_2 + cos(teta)*base_1) + cos(phi)*normal;
 
-    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, temp.xyz ,0,n.xyz,1000,0);
-    oribuf.oris[gl_LaunchIDEXT.x] = temp;
+    // offset ori, to avoid self intersections
+    ori.xyz = offsetRay(ori.xyz, normal);
+    oribuf.oris[gl_LaunchIDEXT.x] = ori;
 
-
+    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, ori.xyz ,0,dir,1000,0);
 
     if (payload.hitIdx != -1) {
-    temp = (1-payload.uv.x-payload.uv.y)*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 0]] + 
+    hit = (1-payload.uv.x-payload.uv.y)*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 0]] + 
                             payload.uv.x*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 1]] + 
                             payload.uv.y*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 2]];
-    temp.w = 10;
+    hit.w = 10;
     }
     else {
-        temp += n*0.1;
-    temp.w = 5;
+        hit = ori + vec4(dir*0.1,0);
+    hit.w = 5;
     }
 
-    dirbuf.dirs[gl_LaunchIDEXT.x] = temp;
+    dirbuf.dirs[gl_LaunchIDEXT.x] = hit;
 
 }

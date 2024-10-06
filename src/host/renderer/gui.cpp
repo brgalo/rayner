@@ -102,7 +102,9 @@ void Gui::gui() {
 
   ImGui::Checkbox("Show Oris", &state->pShow);
   ImGui::SameLine();
-  ImGui::Checkbox("Show Rays", &state->hitShow);
+  ImGui::Checkbox("Show Hits", &state->hitShow);
+  ImGui::SameLine();
+  ImGui::Checkbox("Show Rays", &state->rayShow);
 }
 
 void Gui::render(vk::CommandBuffer &buffer, uint32_t idx, vk::Extent2D extent) {
