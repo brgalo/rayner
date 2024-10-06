@@ -38,13 +38,36 @@ void main() {
     uvec3 idx = uvec3(idxbuf.idxs[tri*3 + 0],
                       idxbuf.idxs[tri*3 + 1],
                       idxbuf.idxs[tri*3 + 2]);
-    vec4 A,B,C,temp;
+    vec4 A,B,C,n,temp;
     float sr1 = sqrt(rnd(seed));
     float r2 = rnd(seed);
     A = vertbuf.verts[idx.x];
     B = vertbuf.verts[idx.y];
     C = vertbuf.verts[idx.z];
     temp = A*(1-sr1) + B*sr1*(1-r2) + C*sr1*r2;
-    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, vec3(0,0,0),0,vec3(1,0,0),1000,0);
+
+    // compute normal
+    n = vec4(cross(vec3(A-B),vec3(C-B)),0.0);
+    n.xyz = normalize(n.xyz);
+
+    temp.xyz = offsetRay(temp.xyz, n.xyz);
+
+    traceRayEXT(scene, gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, temp.xyz ,0,n.xyz,1000,0);
     oribuf.oris[gl_LaunchIDEXT.x] = temp;
+
+
+
+    if (payload.hitIdx != -1) {
+    temp = (1-payload.uv.x-payload.uv.y)*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 0]] + 
+                            payload.uv.x*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 1]] + 
+                            payload.uv.y*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 2]];
+    temp.w = 10;
+    }
+    else {
+        temp += vec4(0,0.3,0,0);
+    temp.w = 5;
+    }
+
+    dirbuf.dirs[gl_LaunchIDEXT.x] = temp;
+
 }

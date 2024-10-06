@@ -115,7 +115,7 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
   if (getGui()->state->rShow) {
     buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinePts.get());
 
-  RtConstsRays.out = RtConstsRays.ori;
+  RtConstsRays.out = RtConstsRays.dir;
   buffer.pushConstants(pipelinePts.getLayout(),
                        vk::ShaderStageFlagBits::eVertex |
                            vk::ShaderStageFlagBits::eFragment,

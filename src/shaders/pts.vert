@@ -28,10 +28,15 @@ layout(push_constant) uniform _pushConsts { pushConsts consts;};
 void main() {
     // always uses outbuf var -> change push consts in render call to point to right buffer!
     OutBuffer outbuf = OutBuffer(consts.outBufferAddress);
+    float state = outbuf.outs[gl_VertexIndex].w;
+    outbuf.outs[gl_VertexIndex].w = 1;
 
-	gl_PointSize = 10.0f;
+	gl_PointSize = 5.f;
 	gl_Position = (ubo.projectionViewMatrix * outbuf.outs[gl_VertexIndex]);
 
+    outbuf.outs[gl_VertexIndex].w = state;
+
+    if (state < - 5.f) {
     if(gl_VertexIndex%8 ==0) {
 //    gl_Position = ubo.projectionViewMatrix * vec4(0,0,0,1);
     fragColor = vec3(1,0,0);        
@@ -50,6 +55,10 @@ void main() {
     fragColor = vec3(1,1,1);
     } else if (gl_VertexIndex%8 ==7) {
     fragColor = vec3(0.5,0.5,0.5);
+    }} else if (state > 5.f) {
+        fragColor = vec3(0.9,0.1,0);
+    } else {
+        fragColor = vec3(0.7,0.3,0);
     }
 //    gl_Position = ubo.projectionViewMatrix * temp;
 }

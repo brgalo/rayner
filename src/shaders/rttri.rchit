@@ -5,4 +5,10 @@
 
 layout(location = 0) rayPayloadInEXT RayPayload payload;
 
-void main() {};
+hitAttributeEXT vec2 baryCoord;
+
+void main() {
+    payload.uv = baryCoord;
+    payload.hitIdx = gl_PrimitiveID;
+    payload.energy = 1.f;
+};
