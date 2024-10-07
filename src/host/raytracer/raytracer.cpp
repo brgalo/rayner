@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_enums.hpp>
 #include <vulkan/vulkan_handles.hpp>
@@ -34,15 +35,13 @@ Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
   createOutputBuffer();
   updatePushConstantsPoints(geom);
 
-  createOutputBufferRays();
+  // create output buffer for raytracer nTris + miss + total hit bins
+  createOutputBufferRays((geom.indices.size()+2)*sizeof(float));
   updatePushConstantsRays(geom);
 };
 
 
 Raytracer::~Raytracer() {
-
-
-  
   vlkn->getDevice().destroyDescriptorSetLayout(layout);
   vlkn->getDevice().destroyAccelerationStructureKHR(tlas);
   vlkn->getVma()->destroyBuffer(tlasAlloc, tlasBuffer);
@@ -52,6 +51,7 @@ Raytracer::~Raytracer() {
   vlkn->getVma()->destroyBuffer(outAlloc, outBuffer);
   vlkn->getVma()->destroyBuffer(oriAlloc, oriBuffer);
   vlkn->getVma()->destroyBuffer(dirAlloc, dirBuffer);
+  vlkn->getVma()->destroyBuffer(hitAlloc, hitBuffer);
   vlkn->getDevice().destroyFence(fence);
 }
 
@@ -328,13 +328,14 @@ void Raytracer::createOutputBuffer() {
   rtPipelinePoints.consts.out = vlkn->getVma()->getDeviceAddress(outBuffer);
 }
 
-void Raytracer::createOutputBufferRays() {
+void Raytracer::createOutputBufferRays(vk::DeviceSize hitBufferSize) {
   vk::DeviceSize size = sizeof(glm::vec4)*outData.size();
   vk::BufferCreateInfo oriBufferCreateInfo{
       {},
       size,
       vk::BufferUsageFlagBits::eStorageBuffer |
           vk::BufferUsageFlagBits::eShaderDeviceAddress};
+  // TODO: remove mapped! isn't needed. I should implement a buffer download function instead
   VmaAllocationCreateInfo oriInfo{VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
                                       VMA_ALLOCATION_CREATE_MAPPED_BIT,
                                   VMA_MEMORY_USAGE_AUTO,
@@ -344,8 +345,15 @@ void Raytracer::createOutputBufferRays() {
                                            oriBufferCreateInfo, oriInfo);
   dirBuffer = vlkn->getVma()->createBuffer(dirAlloc, dirAllocInfo,
                                            oriBufferCreateInfo, oriInfo);
+
+  // change size to accomodate n*n+1 hit bins for the geometry
+  oriBufferCreateInfo.setSize(hitBufferSize);
+  hitBuffer = vlkn->getVma()->createBuffer(hitAlloc, hitAllocInfo,
+                                           oriBufferCreateInfo, oriInfo);
+  
   rtPipelineRays.consts.ori = vlkn->getVma()->getDeviceAddress(oriBuffer);
   rtPipelineRays.consts.dir = vlkn->getVma()->getDeviceAddress(dirBuffer);
+  rtPipelineRays.consts.hit = vlkn->getVma()->getDeviceAddress(hitBuffer);
 }
   
 // namespace rn

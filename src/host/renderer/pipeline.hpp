@@ -141,6 +141,7 @@ public:
     vk::DeviceAddress out;
     vk::DeviceAddress ori;
     vk::DeviceAddress dir;
+    vk::DeviceAddress hit;
     uint64_t currTri = 0;
   } consts;
 

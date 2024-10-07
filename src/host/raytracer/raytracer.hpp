@@ -34,7 +34,7 @@ private:
   void updatePushConstantsPoints(GeometryHandler &geom);
   void updatePushConstantsRays(GeometryHandler &geom);
   void createOutputBuffer();
-  void createOutputBufferRays();
+  void createOutputBufferRays(vk::DeviceSize hitBufferSize);
 
   vk::AccelerationStructureKHR blas;
   vk::AccelerationStructureKHR tlas;
@@ -48,12 +48,15 @@ private:
   vk::Buffer outBuffer;
   vk::Buffer oriBuffer;
   vk::Buffer dirBuffer;
+  vk::Buffer hitBuffer;
   VmaAllocation outAlloc;
   VmaAllocationInfo outAllocInfo;
   VmaAllocation oriAlloc;
   VmaAllocationInfo oriAllocInfo;
   VmaAllocation dirAlloc;
   VmaAllocationInfo dirAllocInfo;
+  VmaAllocation hitAlloc;
+  VmaAllocationInfo hitAllocInfo;
   std::vector<glm::vec4> outData{1000};
 
   vk::AccelerationStructureInstanceKHR instance;

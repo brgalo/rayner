@@ -17,6 +17,7 @@ struct pushConsts {
     uint64_t outBufferAddress;
     uint64_t oriBufferAddress;
     uint64_t dirBufferAddress;
+    uint64_t hitBufferAddress;
     uint64_t currentTri;
 };
 
