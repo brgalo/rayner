@@ -69,6 +69,7 @@ private:
 
   RaytracingPipeline rtPipelinePoints;
   RaytracingPipeline rtPipelineRays;
+  ComputePipeline cpSumOneTri;
   };
 
 } // namespace rn

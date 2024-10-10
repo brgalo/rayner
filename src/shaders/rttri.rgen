@@ -1,5 +1,4 @@
 #version 460
-#extension GL_EXT_debug_printf : enable
 #extension GL_GOOGLE_include_directive : require
 #include "commonrt.glsl"
 #include "random.glsl"
@@ -11,7 +10,13 @@ struct pushConsts {
     uint64_t oriBufferAddress;
     uint64_t dirBufferAddress;
     uint64_t hitBufferAddress;
+    uint64_t energyBufferAddress;
     uint64_t currentTri;
+};
+
+struct hitInfo {
+    uint64_t tri;
+    float energy;
 };
 
 layout(push_constant) uniform _pushConsts { pushConsts consts;};
@@ -21,6 +26,7 @@ layout(buffer_reference, scalar) buffer OriBuffer{vec4 oris[];};
 layout(buffer_reference, scalar) buffer DirBuffer{vec4 dirs[];};
 layout(buffer_reference, scalar) buffer VertBuffer{vec4 verts[];};
 layout(buffer_reference, scalar) buffer IndexBuffer{uint idxs[];};
+layout(buffer_reference, scalar) buffer HitBuffer{hitInfo hits[];};
 
 
 layout(location = 0) rayPayloadEXT RayPayload payload;
@@ -37,6 +43,7 @@ void main() {
     DirBuffer dirbuf = DirBuffer(consts.dirBufferAddress);
     VertBuffer vertbuf = VertBuffer(consts.vertsBufferAddress);
     IndexBuffer idxbuf = IndexBuffer(consts.idxBufferAddress);
+    HitBuffer hitbuf = HitBuffer(consts.hitBufferAddress);
 
     uvec3 idx = uvec3(idxbuf.idxs[tri*3 + 0],
                       idxbuf.idxs[tri*3 + 1],
@@ -76,10 +83,16 @@ void main() {
     hit = (1-payload.uv.x-payload.uv.y)*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 0]] + 
                             payload.uv.x*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 1]] + 
                             payload.uv.y*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 2]];
+    // store hit to hitbuffer
+    hitbuf.hits[gl_LaunchIDEXT.x] = hitInfo(payload.hitIdx, hit.w);
+    
     hit.w = 10;
+
     }
     else {
-        hit = ori + vec4(dir*0.1,0);
+    hit = ori + vec4(dir*0.1,0);
+    // store max val as hit
+    hitbuf.hits[gl_LaunchIDEXT.x] = hitInfo(0xffffffff, hit.w);
     hit.w = 5;
     }
 

@@ -17,14 +17,15 @@ namespace rn {
 Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
                      GeometryHandler &geom)
     : vlkn(vlkn_), descriptor(vlkn_),
-      rtPipelinePoints(descriptor, vk::PipelineBindPoint::eRayTracingKHR, vlkn,
+      rtPipelinePoints(descriptor, vlkn,
                        std::string("spv/rt.rchit.spv"),
                        std::string("spv/rt.rgen.spv"),
                        std::string("spv/rt.rmiss.spv")),
-      rtPipelineRays(descriptor, vk::PipelineBindPoint::eRayTracingKHR, vlkn,
+      rtPipelineRays(descriptor, vlkn,
                      std::string("spv/rttri.rchit.spv"),
                      std::string("spv/rttri.rgen.spv"),
-                     std::string("spv/rttri.rmiss.spv")) {
+                     std::string("spv/rttri.rmiss.spv")),
+      cpSumOneTri(vlkn, std::string("spv/addUpSingleTri.comp.spv")) {
               
               buildBlas(geom);
   buildTlas();

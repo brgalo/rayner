@@ -35,7 +35,7 @@ struct PipelineConfigInfo {
 
 class Pipeline {
 public:
-  Pipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
+  Pipeline(DescriptorSet *set_, vk::PipelineBindPoint bindP,
            std::shared_ptr<VulkanHandler> vulkn_);
   ~Pipeline() {
     vlkn->getDevice().destroyPipeline(pipeline_);
@@ -66,6 +66,17 @@ protected:
 private:
   const vk::PipelineBindPoint bindPoint;
   std::vector<char> readFile(const std::string &filepath);
+};
+
+class ComputePipeline : public Pipeline {
+public:
+  ComputePipeline(std::shared_ptr<VulkanHandler> vlkn,
+                  const std::string &compPath);
+  void createLayout() override;
+  void config() override;
+
+protected:
+  std::string path;
 };
 
 class GraphicsPipeline : public Pipeline {
@@ -115,13 +126,9 @@ private:
   void createLayout() override;
 };
 
-class ComputePipeline : Pipeline {
-
-};
-
 class RaytracingPipeline : public Pipeline {
 public:
-  RaytracingPipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
+  RaytracingPipeline(DescriptorSet &set_,
                      std::shared_ptr<VulkanHandler> vulkn_, std::string cHitname, std::string rGenname, std::string rMissname);
   ~RaytracingPipeline();
   
@@ -142,6 +149,7 @@ public:
     vk::DeviceAddress ori;
     vk::DeviceAddress dir;
     vk::DeviceAddress hit;
+    vk::DeviceAddress energy;
     uint64_t currTri = 0;
   } consts;
 

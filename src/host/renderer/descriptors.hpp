@@ -126,5 +126,11 @@ private:
 vk::WriteDescriptorSet write;
 };
 
+class ComputeDescriptors : public DescriptorSet {
+public:
+  ComputeDescriptors(std::shared_ptr<VulkanHandler> vlkn_) : DescriptorSet(vlkn_) {
+    createPool(0);
+  };
+};
 
 } // namespace rn

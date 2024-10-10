@@ -13,6 +13,7 @@
 #include <fstream>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan_enums.hpp>
+#include <vulkan/vulkan_handles.hpp>
 #include <vulkan/vulkan_structs.hpp>
 
 
@@ -21,15 +22,43 @@
 
 namespace rn {
 
-Pipeline::Pipeline(DescriptorSet &set_, vk::PipelineBindPoint bindP,
+Pipeline::Pipeline(DescriptorSet *set_, vk::PipelineBindPoint bindP,
                    std::shared_ptr<VulkanHandler> vulkn_)
-    : set(set_), bindPoint(bindP), vlkn(vulkn_) {}
+    : set(*set_), bindPoint(bindP), vlkn(vulkn_) {}
 
 GraphicsPipeline::GraphicsPipeline(DescriptorSet &set_, vk::RenderPass renderPass_,
                    std::shared_ptr<VulkanHandler> vlkn)
-      : Pipeline(set_, vk::PipelineBindPoint::eGraphics, vlkn){
+      : Pipeline(&set_, vk::PipelineBindPoint::eGraphics, vlkn){
   renderPass = renderPass_;
   GraphicsPipeline::config();
+};
+
+ComputePipeline::ComputePipeline(std::shared_ptr<VulkanHandler> vlkn,
+                                 const std::string &compPath)
+    : Pipeline(nullptr, vk::PipelineBindPoint::eCompute, vlkn), path(compPath) {
+
+  createLayout();
+  config();
+};
+
+void ComputePipeline::createLayout() {
+  // create layout
+  vk::PushConstantRange pushConstRange{vk::ShaderStageFlagBits::eCompute, 0,
+                                       sizeof(RaytracingPipeline::RtConsts)};
+  vk::PipelineLayoutCreateInfo layoutInfo{{}, {}, pushConstRange};
+  layout_ = vlkn->getDevice().createPipelineLayout(layoutInfo);
+};
+
+void ComputePipeline::config() {
+    // shader modules
+  vk::ShaderModule comp = createModule(path);
+
+  vk::PipelineShaderStageCreateInfo shaderStage{
+      {}, vk::ShaderStageFlagBits::eCompute, comp, "main"};
+  vk::ComputePipelineCreateInfo createInfo{{}, shaderStage, layout_};
+  pipeline_ =
+      vlkn->getDevice().createComputePipeline(nullptr, createInfo).value;
+  destroyModule(comp);
 };
 
 GraphicsPipelineTriangles::GraphicsPipelineTriangles(DescriptorSet &set_,
@@ -73,12 +102,11 @@ RaytracingPipeline::~RaytracingPipeline() {
 
 
 RaytracingPipeline::RaytracingPipeline(DescriptorSet &set_,
-                                       vk::PipelineBindPoint bindP,
                                        std::shared_ptr<VulkanHandler> vulkn_,
                                        std::string cHitname,
                                        std::string rGenname,
                                        std::string rMissname)
-    : Pipeline(set_, bindP, vulkn_), cHit(createModule(cHitname)),
+    : Pipeline(&set_, vk::PipelineBindPoint::eRayTracingKHR, vulkn_), cHit(createModule(cHitname)),
       rGen(createModule(rGenname)), rMiss(createModule(rMissname)) {
       RaytracingPipeline::createLayout();
 
