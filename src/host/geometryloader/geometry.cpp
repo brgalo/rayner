@@ -34,7 +34,7 @@ template <> struct hash<glm::vec3> {
 namespace rn {
 
 GeometryHandler::GeometryHandler(std::shared_ptr<VMA> vma_) : vma(vma_) {
-  loadObj("geom/colored_cube.obj");
+  loadObj("geom/icoandcube.obj");
   vertex = vma->uploadVertices(vertices, vertexAlloc);
   index = vma->uploadIndices(indices, indexAlloc);
   triangleNames->resize(indices.size()/3);
@@ -56,7 +56,7 @@ std::vector<vk::VertexInputAttributeDescription> GeometryHandler::getAttributeDe
 
 std::vector<vk::VertexInputBindingDescription>
 GeometryHandler::getInputDescription() {
-  return {{0, sizeof(glm::vec3), vk::VertexInputRate::eVertex}};
+  return {{0, sizeof(glm::vec4), vk::VertexInputRate::eVertex}};
 }
 
 void GeometryHandler::loadObj(const std::string &filePath) {

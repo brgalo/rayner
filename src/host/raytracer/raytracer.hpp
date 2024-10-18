@@ -26,6 +26,11 @@ public:
   void traceOri(std::shared_ptr<State> state);
   void traceRays(std::shared_ptr<State> state);
 
+  struct HitRecord {
+    uint64_t tri;
+    float energy;
+  };
+  
 private:
   std::shared_ptr<VulkanHandler> vlkn;
   void buildBlas(GeometryHandler &geom);
@@ -34,7 +39,7 @@ private:
   void updatePushConstantsPoints(GeometryHandler &geom);
   void updatePushConstantsRays(GeometryHandler &geom);
   void createOutputBuffer();
-  void createOutputBufferRays(vk::DeviceSize hitBufferSize);
+  void createOutputBufferRays(vk::DeviceSize hitBufferSize, vk::DeviceSize energyBufferSize);
 
   vk::AccelerationStructureKHR blas;
   vk::AccelerationStructureKHR tlas;
@@ -49,6 +54,7 @@ private:
   vk::Buffer oriBuffer;
   vk::Buffer dirBuffer;
   vk::Buffer hitBuffer;
+  vk::Buffer energyBuffer;
   VmaAllocation outAlloc;
   VmaAllocationInfo outAllocInfo;
   VmaAllocation oriAlloc;
@@ -57,6 +63,8 @@ private:
   VmaAllocationInfo dirAllocInfo;
   VmaAllocation hitAlloc;
   VmaAllocationInfo hitAllocInfo;
+  VmaAllocation energyAlloc;
+  VmaAllocationInfo energyAllocInfo;
   std::vector<glm::vec4> outData{1000};
 
   vk::AccelerationStructureInstanceKHR instance;

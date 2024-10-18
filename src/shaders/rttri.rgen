@@ -67,7 +67,7 @@ void main() {
     vec3 normal,base_1,base_2,dir;
     // compute normal
     base_1 = normalize(A.xyz-B.xyz);
-    normal = normalize(cross(base_1,C.xyz-B.xyz));
+    normal = -normalize(cross(base_1,C.xyz-B.xyz));
     base_2 = normalize(cross(base_1,normal));
 
     // compute dir
@@ -84,7 +84,7 @@ void main() {
                             payload.uv.x*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 1]] + 
                             payload.uv.y*vertbuf.verts[idxbuf.idxs[payload.hitIdx*3 + 2]];
     // store hit to hitbuffer
-    hitbuf.hits[gl_LaunchIDEXT.x] = hitInfo(payload.hitIdx, hit.w);
+    hitbuf.hits[gl_LaunchIDEXT.x] = hitInfo(payload.hitIdx, rayEnergy);
     
     hit.w = 10;
 
@@ -92,7 +92,7 @@ void main() {
     else {
     hit = ori + vec4(dir*0.1,0);
     // store max val as hit
-    hitbuf.hits[gl_LaunchIDEXT.x] = hitInfo(0xffffffff, hit.w);
+    hitbuf.hits[gl_LaunchIDEXT.x] = hitInfo(0xffffffff, rayEnergy);
     hit.w = 5;
     }
 

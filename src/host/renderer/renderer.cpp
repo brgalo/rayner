@@ -12,6 +12,15 @@
 #include "vma.hpp"
 
 namespace rn {
+
+Renderer::Renderer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom_)
+    : vlkn(vlkn_), descriptors(vlkn_) {
+    consts.mat = glm::mat4{1.0f};
+    createCommandBuffers();
+    gui = std::make_shared<Gui>(*vlkn, window, swapChain, geom_.triangleNames);
+    swapChain.setGui(gui);
+};
+
 Renderer::~Renderer() {
   freeCommandBuffers();
 }
@@ -67,22 +76,22 @@ void Renderer::render(vk::Buffer vertexBuffer, vk::Buffer indexBuffer,
                                     {vk::Offset2D{0, 0}, swapChain.getExtent()},
                                     clearVals};
   buffer.beginRenderPass(beginInfo, vk::SubpassContents::eInline);
-  /*
+  
   buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineTri.get());
   buffer.pushConstants(pipelineTri.getLayout(),
                        vk::ShaderStageFlagBits::eVertex |
                            vk::ShaderStageFlagBits::eFragment,
-                       0, sizeof(Consts), &consts);
+                       0, sizeof(RtConstsRays), &RtConstsRays);
   buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                             pipelineTri.getLayout(), 0,
                             descriptors.getSets().at(syncIdx), nullptr);
-  buffer.bindVertexBuffers(0, vertexBuffer, {0});
-  buffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
-*/
+ // buffer.bindVertexBuffers(0, vertexBuffer, {0});
+ // buffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
+  
   buffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(swapChain.getExtent().width),
                                      static_cast<float>(swapChain.getExtent().height), 0.0f, 1.0f));
   buffer.setScissor(0, vk::Rect2D(vk::Offset2D{0, 0}, swapChain.getExtent()));
-  //buffer.drawIndexed(nIdx, 1, 0, 0, 0);
+  buffer.draw(nIdx, 1, 0, 0);
 
   // render lines
   if (getGui()->state->rayShow) {

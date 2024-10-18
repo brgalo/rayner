@@ -1,5 +1,6 @@
 #include "raytracer.hpp"
 #include "descriptors.hpp"
+#include "geometryloader/geometry.hpp"
 #include "pipeline.hpp"
 #include "vknhandler.hpp"
 #include "vma.hpp"
@@ -37,7 +38,8 @@ Raytracer::Raytracer(std::shared_ptr<VulkanHandler> vlkn_,
   updatePushConstantsPoints(geom);
 
   // create output buffer for raytracer nTris + miss + total hit bins
-  createOutputBufferRays((geom.indices.size()+2)*sizeof(float));
+  createOutputBufferRays(1000 * sizeof(HitRecord),
+                         geom.indices.size() * sizeof(float));
   updatePushConstantsRays(geom);
 };
 
@@ -53,6 +55,7 @@ Raytracer::~Raytracer() {
   vlkn->getVma()->destroyBuffer(oriAlloc, oriBuffer);
   vlkn->getVma()->destroyBuffer(dirAlloc, dirBuffer);
   vlkn->getVma()->destroyBuffer(hitAlloc, hitBuffer);
+  vlkn->getVma()->destroyBuffer(energyAlloc, energyBuffer);
   vlkn->getDevice().destroyFence(fence);
 }
 
@@ -291,6 +294,18 @@ void Raytracer::traceRays(std::shared_ptr<State> state) {
   buffer.traceRaysKHR(rtPipelineRays.rgenRegion, rtPipelineRays.missRegion,
                       rtPipelineRays.hitRegion, {}, state->nRays, 1, 1);
 
+
+  // add memory barrier
+  vk::MemoryBarrier barrier{};
+  barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+  barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+  buffer.pipelineBarrier(vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+                         vk::PipelineStageFlagBits::eComputeShader, {}, barrier,
+                         nullptr, nullptr);
+  buffer.bindPipeline(vk::PipelineBindPoint::eCompute, cpSumOneTri.get());
+  buffer.dispatch(12, 1, 1);
+
   vlkn->endSingleTimeCommands(buffer);
   
   vlkn->getGqueue().waitIdle();
@@ -329,7 +344,7 @@ void Raytracer::createOutputBuffer() {
   rtPipelinePoints.consts.out = vlkn->getVma()->getDeviceAddress(outBuffer);
 }
 
-void Raytracer::createOutputBufferRays(vk::DeviceSize hitBufferSize) {
+void Raytracer::createOutputBufferRays(vk::DeviceSize hitBufferSize, vk::DeviceSize energyBufferSize) {
   vk::DeviceSize size = sizeof(glm::vec4)*outData.size();
   vk::BufferCreateInfo oriBufferCreateInfo{
       {},
@@ -351,10 +366,14 @@ void Raytracer::createOutputBufferRays(vk::DeviceSize hitBufferSize) {
   oriBufferCreateInfo.setSize(hitBufferSize);
   hitBuffer = vlkn->getVma()->createBuffer(hitAlloc, hitAllocInfo,
                                            oriBufferCreateInfo, oriInfo);
+  oriBufferCreateInfo.setSize(energyBufferSize);
+  energyBuffer = vlkn->getVma()->createBuffer(energyAlloc, energyAllocInfo,
+                                              oriBufferCreateInfo, oriInfo);
   
   rtPipelineRays.consts.ori = vlkn->getVma()->getDeviceAddress(oriBuffer);
   rtPipelineRays.consts.dir = vlkn->getVma()->getDeviceAddress(dirBuffer);
   rtPipelineRays.consts.hit = vlkn->getVma()->getDeviceAddress(hitBuffer);
+  rtPipelineRays.consts.energy = vlkn->getVma()->getDeviceAddress(energyBuffer);
 }
   
 // namespace rn

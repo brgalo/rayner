@@ -1,6 +1,7 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 #include "commonrt.glsl"
+
 struct pushConsts {
     uint64_t vertsBufferAddress;
     uint64_t idxBufferAddress;
@@ -17,7 +18,24 @@ struct hitInfo {
     float energy;
 };
 
-
+layout(push_constant) uniform _pushConsts { pushConsts consts;};
+layout(buffer_reference, scalar) buffer HitBuffer{hitInfo hit[];};
+layout(buffer_reference, scalar) buffer EnergyBuffer{float e[];};
 void main() {
+    uint64_t idx = gl_GlobalInvocationID.x;
 
+    float totalEnergy = 0;
+    float triEnergy = 0;
+
+    EnergyBuffer energybuf = EnergyBuffer(consts.energyBufferAddress);
+    HitBuffer hitbuf = HitBuffer(consts.hitBufferAddress);
+
+    for (uint i = 0; i < 1000; i++) {
+        float energy = hitbuf.hit[i].energy;
+        if (hitbuf.hit[i].tri == idx) {
+            triEnergy += energy;}
+        totalEnergy += energy;
+        }
+    triEnergy /= totalEnergy;
+    energybuf.e[uint(idx)] = triEnergy;
 }

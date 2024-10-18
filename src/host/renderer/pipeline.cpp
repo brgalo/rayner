@@ -70,7 +70,7 @@ GraphicsPipelineTriangles::GraphicsPipelineTriangles(DescriptorSet &set_,
   auto attributeDescription = GeometryHandler::getAttributeDescription().front();
 
   vk::PipelineVertexInputStateCreateInfo createInfo{
-      {}, inputDescription, attributeDescription};
+      {}, 0, nullptr, 0, nullptr};
   init("spv/tri.vert.spv", "spv/tri.frag.spv", createInfo);
 };
 

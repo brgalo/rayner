@@ -28,12 +28,18 @@ static void HelpMarker(const char* desc)
 
 void Gui::oriMenu() {
   const char* items[] = {"Tri 1", "Tri 2", "Tri 3"};
+  bool changed = false;
   static int current_item = 0;
   static int nPoints = 100;
-  ImGui::Combo("Triangle", &current_item, &State::itemGetter,
-               triangleNames->data(), triangleNames->size());
-  ImGui::DragInt("Number of points to sample", &nPoints, 1, 0, 1000);
-  if (ImGui::Button("Launch")) {
+  if (ImGui::Combo("Triangle", &current_item, &State::itemGetter,
+               triangleNames->data(), triangleNames->size())) {
+                changed = true;
+               }
+
+  if (ImGui::DragInt("Number of points to sample", &nPoints, 1, 0, 1000)) {
+    changed = true;
+  }
+  if (ImGui::Button("Launch") || changed) {
     state->currTri = current_item;
     state->nPoints = nPoints;
     state->pLaunch = true;

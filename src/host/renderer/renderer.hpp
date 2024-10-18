@@ -26,13 +26,7 @@ struct Consts {
 
 class Renderer {
 public:
-  Renderer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom_) : vlkn(vlkn_), descriptors(vlkn_) {
-    consts.mat = glm::mat4{1.0f};
-    createCommandBuffers();
-    gui = std::make_shared<Gui>(*vlkn, window, swapChain, geom_.triangleNames);
-
-    swapChain.setGui(gui);
-  };
+  Renderer(std::shared_ptr<VulkanHandler> vlkn_, GeometryHandler &geom_);
 
   ~Renderer();
   bool run();

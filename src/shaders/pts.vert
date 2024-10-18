@@ -23,6 +23,7 @@ struct pushConsts {
 };
 
 
+
 layout(buffer_reference, scalar) buffer OutBuffer{vec4 outs[];};
 
 layout(push_constant) uniform _pushConsts { pushConsts consts;};
@@ -60,7 +61,7 @@ void main() {
     }} else if (state > 5.f) {
         fragColor = vec3(0.9,0.1,0);
     } else {
-        fragColor = vec3(0.7,0.3,0);
+        fragColor = vec3(0,0.1,0.9);
     }
 //    gl_Position = ubo.projectionViewMatrix * temp;
 }

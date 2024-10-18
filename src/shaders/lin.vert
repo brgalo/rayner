@@ -22,12 +22,11 @@ struct pushConsts {
     uint64_t currentTri;
 };
 
+
 layout(buffer_reference, scalar) buffer OriBuffer{vec4 oris[];};
 layout(buffer_reference, scalar) buffer DirBuffer{vec4 dirs[];};
 
 layout(push_constant) uniform _pushConsts { pushConsts consts;};
-
-const float AMBIENT = 0.02;
 
 void main() {
 
@@ -41,9 +40,28 @@ void main() {
     }
 
     float lightIntensity = 0.8 ;
-    if(dirbuf.dirs[gl_VertexIndex/2].w > 7) {
+/*    if(dirbuf.dirs[gl_VertexIndex/2].w > 7) {
     fragColor = vec3(1,0.2,0.2);
     } else {
         fragColor = vec3(0.2,1,0.2);
     }
+    */
+        if(gl_VertexIndex%8 ==0) {
+    fragColor = vec3(1,0,0);        
+    } else if (gl_VertexIndex%8 ==1) {
+    fragColor = vec3(0,1,0);
+    } else if (gl_VertexIndex%8 ==2) {
+    fragColor = vec3(0,0,1);
+    } else if (gl_VertexIndex%8 ==3) {
+    fragColor = vec3(1,1,0);
+    } else if (gl_VertexIndex%8 ==4) {
+    fragColor = vec3(0,1,1);
+    } else if (gl_VertexIndex%8 ==5) {
+    fragColor = vec3(1,0,1);
+    } else if (gl_VertexIndex%8 ==6) {
+    fragColor = vec3(1,1,1);
+    } else if (gl_VertexIndex%8 ==7) {
+    fragColor = vec3(0.5,0.5,0.5);
+    };
+    
 }
