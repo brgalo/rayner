@@ -16,13 +16,14 @@ The finished program should feature:
     - [x] get from energy distribution to vf for each triangle
     - [ ] get from energy distribution to vf for each mesh
 
-
+## current state
+![](doc/img/Screenshot_20241028_201649.png)
 
 ## Future:
 
 - Integrate Environmental Fluxes
 - Integrate Orbit Propagation
-- Simulate the residual atomsphere as rays which will interact with the model
+- Simulate the residual atmosphere as rays which will interact with the model
   - heat
   - degradation
   - induced torque and forces
