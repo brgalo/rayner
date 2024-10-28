@@ -7,11 +7,11 @@ This WIP project aim is to rebuild my old Bachelor's thesis on hardware accelera
 The finished program should feature:
 
 1. Graphical window, showing the geometry, traced rays and viewfactors
-    - Have a gui (imgui)
-    - real time updated plots
+    [-] Have a gui (imgui)
+    [-] real time updated plots
 2. Thermal raytracing
-    - launch rays from each triangle, show where they hit
-    - trace all inidividal triangles and be able to color all triangles in accordance to their absorbed energy
+    [-] launch rays from each triangle, show where they hit
+    [-] trace all inidividal triangles and be able to color all triangles in accordance to their absorbed energy
 3. Compute Pipeline
     - get from energy distribution to vf for each mesh
 
